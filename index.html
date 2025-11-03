@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SalesBoard | Painel de Vendas em Tempo Real</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- Biblioteca de Fogos de Artifício -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #FF6B35;
+            --primary-dark: #E55A2B;
+            --secondary: #FFA726;
+            --accent: #FF4081;
+            --dark: #1A1D2E;
+            --darker: #121625;
+            --light: #F5F7FA;
+            --success: #4CAF50;
+            --warning: #FFB547;
+            --danger: #FF5252;
+            --card-bg: #252A41;
+            --text: #E4E6F0;
+            --text-secondary: #8C90B3;
+            --gradient: linear-gradient(135deg, #FF6B35, #FFA726);
+            --gradient-dark: linear-gradient(135deg, #E55A2B, #FF9800);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--darker), var(--dark));
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px 30px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 107, 53, 0.1);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+        }
+        
+        .logo h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(76, 175, 80, 0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(255, 107, 53, 0.3);
+        }
+        
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient);
+        }
+        
+        .stat-title {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-goal {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient);
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+        
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--success);
+            font-size: 0.8rem;
+            margin-left: 10px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        
+        .rankings-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .ranking-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .ranking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .ranking-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .ranking-title i {
+            color: var(--primary);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            overflow: hidden;
+            padding: 20px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .chart-bar {
+            width: 80px;
+            background: var(--gradient);
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            transition: height 1s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        }
+        
+        .chart-bar-label {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text);
+            font-weight: 600;
+            width: 100%;
+            word-break: break-word;
+        }
+        
+        .chart-bar-value {
+            margin-bottom: 5px;
+            text-align: center;
+            font-weight: bold;
+            color: white;
+            font-size: 1.2rem;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .add-sale-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.8rem;
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.5);
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            z-index: 100;
+        }
+        
+        .add-sale-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.7);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 24px;
+            width: 90%;
+            max-width: 500px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            animation: modalAppear 0.3s ease-out;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        @keyframes modalAppear {
+            from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-modal:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        
+        .custom-select {
+            position: relative;
+            width: 100%;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 1rem;
+            transition: all 0.3s;
+            appearance: none;
+        }
+        
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238C90B3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 16px;
+            padding-right: 45px;
+            cursor: pointer;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.2);
+        }
+
+        select option {
+            background: var(--card-bg);
+            color: var(--text);
+            padding: 12px;
+            border: none;
+        }
+
+        .custom-select::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 16px;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238C90B3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+            pointer-events: none;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: var(--gradient);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-top: 10px;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 107, 53, 0.4);
+        }
+        
+        .achievements {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .achievement {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            transition: transform 0.3s, background 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .achievement:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .achievement.unlocked {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.15), rgba(255, 167, 38, 0.15));
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            box-shadow: 0 8px 20px rgba(255, 107, 53, 0.2);
+        }
+        
+        .achievement-icon {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+        }
+        
+        .achievement-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .achievement-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .toast {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: var(--success);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1001;
+            transform: translateX(150%);
+            transition: transform 0.4s ease;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast-icon {
+            font-size: 1.5rem;
+        }
+        
+        .recent-sales {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-top: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .sales-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        
+        .sale-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border-left: 4px solid var(--primary);
+        }
+
+        /* ANIMAÇÕES DE CELEBRAÇÃO */
+        .celebration-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, transparent 50%, rgba(255, 107, 53, 0.1) 100%);
+            z-index: 10000;
+            pointer-events: none;
+            opacity: 0;
+            animation: celebrationGlow 2s ease-out;
+        }
+
+        @keyframes celebrationGlow {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .celebration-text {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 4rem;
+            font-weight: 900;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            z-index: 10001;
+            text-align: center;
+            animation: celebrationText 2s ease-out;
+            text-shadow: 0 0 30px rgba(255, 107, 53, 0.5);
+        }
+
+        @keyframes celebrationText {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+        }
+
+        .particle {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        
+        @media (max-width: 1200px) {
+            .stats-overview {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .rankings-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .achievements-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-overview {
+                grid-template-columns: 1fr;
+            }
+            
+            .achievements-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-container {
+                height: 250px;
+                padding: 15px;
+            }
+            
+            .chart-bar {
+                width: 60px;
+            }
+            
+            header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h1>SalesBoard <small style="font-size: 0.6rem; color: var(--text-secondary);">LIVE</small></h1>
+            </div>
+            <div class="connection-status">
+                <div class="status-dot"></div>
+                <span>Conectado em Tempo Real</span>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar" id="user-avatar">VS</div>
+                <div>
+                    <div id="user-name">Vendedor</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);" id="user-role">SDR/Closer</div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="stats-overview">
+            <div class="stat-card">
+                <div class="stat-title">
+                    <i class="fas fa-chart-line"></i>
+                    Contas do Mês
+                </div>
+                <div class="stat-value" id="total-accounts">0</div>
+                <div class="stat-goal">Meta: 132 contas</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="accounts-progress" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">
+                    <i class="fas fa-dollar-sign"></i>
+                    Faturamento do Mês
+                </div>
+                <div class="stat-value" id="total-revenue">R$ 0</div>
+                <div class="stat-goal">Meta: R$ 526.680</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="revenue-progress" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">
+                    <i class="fas fa-trophy"></i>
+                    SDR do Mês
+                </div>
+                <div class="stat-value" id="top-sdr">-</div>
+                <div class="stat-goal" id="top-sdr-accounts">0 contas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">
+                    <i class="fas fa-crown"></i>
+                    Closer do Mês
+                </div>
+                <div class="stat-value" id="top-closer">-</div>
+                <div class="stat-goal" id="top-closer-accounts">0 contas</div>
+            </div>
+        </div>
+        
+        <div class="rankings-section">
+            <div class="ranking-card">
+                <div class="ranking-header">
+                    <h2 class="ranking-title">
+                        <i class="fas fa-user-tie"></i>
+                        Performance SDRs
+                    </h2>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">Contas Fechadas</div>
+                </div>
+                
+                <div class="chart-container" id="sdr-chart">
+                    <!-- Gráfico será preenchido via JavaScript -->
+                </div>
+            </div>
+            
+            <div class="ranking-card">
+                <div class="ranking-header">
+                    <h2 class="ranking-title">
+                        <i class="fas fa-handshake"></i>
+                        Performance Closers
+                    </h2>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">Contas Fechadas</div>
+                </div>
+                
+                <div class="chart-container" id="closer-chart">
+                    <!-- Gráfico será preenchido via JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="achievements">
+            <h2 class="ranking-title">
+                <i class="fas fa-award"></i>
+                Conquistas
+            </h2>
+            <div class="achievements-grid">
+                <div class="achievement">
+                    <div class="achievement-icon">🎯</div>
+                    <h3 class="achievement-title">Meta Batida SDR</h3>
+                    <p class="achievement-desc">34 contas fechadas</p>
+                </div>
+                <div class="achievement">
+                    <div class="achievement-icon">🚀</div>
+                    <h3 class="achievement-title">Super Meta SDR</h3>
+                    <p class="achievement-desc">44 contas fechadas</p>
+                </div>
+                <div class="achievement">
+                    <div class="achievement-icon">🥇</div>
+                    <h3 class="achievement-title">SDR do Mês</h3>
+                    <p class="achievement-desc">-</p>
+                </div>
+                <div class="achievement">
+                    <div class="achievement-icon">🎯</div>
+                    <h3 class="achievement-title">Meta Batida Closer</h3>
+                    <p class="achievement-desc">44 contas fechadas</p>
+                </div>
+                <div class="achievement">
+                    <div class="achievement-icon">🚀</div>
+                    <h3 class="achievement-title">Super Meta Closer</h3>
+                    <p class="achievement-desc">55 contas fechadas</p>
+                </div>
+                <div class="achievement">
+                    <div class="achievement-icon">🥇</div>
+                    <h3 class="achievement-title">Closer do Mês</h3>
+                    <p class="achievement-desc">-</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="recent-sales">
+            <h2 class="ranking-title">
+                <i class="fas fa-clock"></i>
+                Vendas Recentes
+            </h2>
+            <div class="sales-list" id="recent-sales">
+                <div class="sale-item">
+                    <div>Nenhuma venda registrada ainda</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="add-sale-btn" id="open-modal">
+            <i class="fas fa-plus"></i>
+        </div>
+        
+        <div class="modal" id="sale-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Registrar Nova Venda</h2>
+                    <button class="close-modal" id="close-modal">&times;</button>
+                </div>
+                <form id="sale-form">
+                    <div class="form-group">
+                        <label for="user-name-input">Seu Nome</label>
+                        <div class="input-container">
+                            <input type="text" id="user-name-input" placeholder="Digite seu nome" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="sdr">SDR</label>
+                        <div class="custom-select">
+                            <select id="sdr" required>
+                                <option value="">Selecione um SDR</option>
+                                <option value="Alex Neder">Alex Neder</option>
+                                <option value="João Martins">João Martins</option>
+                                <option value="Gabriel Ferreira">Gabriel Ferreira</option>
+                                <option value="Charles Muller">Charles Muller</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="closer">Closer</label>
+                        <div class="custom-select">
+                            <select id="closer" required>
+                                <option value="">Selecione um Closer</option>
+                                <option value="Diego">Diego</option>
+                                <option value="Josue">Josue</option>
+                                <option value="Thiago Parreira">Thiago Parreira</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="accounts">Número de Contas</label>
+                        <div class="input-container">
+                            <input type="number" id="accounts" min="1" max="10" value="1" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="value">Valor Total (R$)</label>
+                        <div class="input-container">
+                            <input type="number" id="value" min="0" step="0.01" placeholder="Ex: 2500.00" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-check-circle"></i> Registrar Venda
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="toast" id="success-toast">
+            <div class="toast-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="toast-message">Venda registrada com sucesso!</div>
+        </div>
+    </div>
+
+    <script>
+        // ===============================
+        // CONFIGURAÇÃO DO FIREBASE
+        // ===============================
+        
+        // Substitua estas configurações pelas suas do Firebase
+        const firebaseConfig = {
+          apiKey: "AIzaSyBP-N8gAsJGuBF4TU38UYws8doYJJhq2eA",
+          authDomain: "salesboard-72715.firebaseapp.com",
+          databaseURL: "https://salesboard-72715-default-rtdb.firebaseio.com",
+          projectId: "salesboard-72715",
+          storageBucket: "salesboard-72715.firebasestorage.app",
+          messagingSenderId: "800770788711",
+          appId: "1:800770788711:web:0b770b7ff29946ae2c73c2",
+           measurementId: "G-VWFQ4FYBQT"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // ===============================
+        // DADOS INICIAIS
+        // ===============================
+        
+        let sdrData = [
+            { name: "Alex Neder", accounts: 0 },
+            { name: "João Martins", accounts: 0 },
+            { name: "Gabriel Ferreira", accounts: 0 },
+            { name: "Charles Muller", accounts: 0 }
+        ];
+        
+        let closerData = [
+            { name: "Diego", accounts: 0 },
+            { name: "Josue", accounts: 0 },
+            { name: "Thiago Parreira", accounts: 0 }
+        ];
+        
+        let totalAccounts = 0;
+        let totalRevenue = 0;
+        const revenueGoal = 526680;
+        const accountsGoal = 132;
+
+        let currentUser = {
+            name: "",
+            role: ""
+        };
+
+        // ===============================
+        // FUNÇÕES DO FIREBASE
+        // ===============================
+
+        // Salvar dados no Firebase
+        function saveDataToFirebase() {
+            const data = {
+                sdrData: sdrData,
+                closerData: closerData,
+                totalAccounts: totalAccounts,
+                totalRevenue: totalRevenue,
+                lastUpdate: new Date().toISOString()
+            };
+            
+            database.ref('salesData').set(data)
+                .then(() => console.log("Dados salvos no Firebase"))
+                .catch((error) => console.error("Erro ao salvar:", error));
+        }
+
+        // Ouvir mudanças no Firebase
+        function listenToFirebaseChanges() {
+            database.ref('salesData').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    sdrData = data.sdrData || sdrData;
+                    closerData = data.closerData || closerData;
+                    totalAccounts = data.totalAccounts || 0;
+                    totalRevenue = data.totalRevenue || 0;
+                    
+                    updateCharts();
+                    console.log("Dados atualizados do Firebase");
+                }
+            });
+        }
+
+        // Adicionar venda recente
+        function addRecentSale(saleData) {
+            const salesRef = database.ref('recentSales');
+            const newSaleRef = salesRef.push();
+            
+            saleData.timestamp = new Date().toISOString();
+            saleData.user = currentUser.name;
+            
+            newSaleRef.set(saleData)
+                .then(() => console.log("Venda recente salva"))
+                .catch((error) => console.error("Erro ao salvar venda recente:", error));
+        }
+
+        // Carregar vendas recentes
+        function loadRecentSales() {
+            database.ref('recentSales').limitToLast(10).on('value', (snapshot) => {
+                const sales = snapshot.val();
+                const salesList = document.getElementById('recent-sales');
+                salesList.innerHTML = '';
+                
+                if (sales) {
+                    const salesArray = Object.values(sales).reverse();
+                    
+                    salesArray.forEach(sale => {
+                        const saleItem = document.createElement('div');
+                        saleItem.className = 'sale-item';
+                        saleItem.innerHTML = `
+                            <div>
+                                <strong>${sale.user}</strong> - ${sale.accounts} conta(s)
+                            </div>
+                            <div>
+                                R$ ${sale.value.toLocaleString('pt-BR')} 
+                                <small style="color: var(--text-secondary); font-size: 0.8rem;">
+                                    ${new Date(sale.timestamp).toLocaleTimeString()}
+                                </small>
+                            </div>
+                        `;
+                        salesList.appendChild(saleItem);
+                    });
+                } else {
+                    salesList.innerHTML = '<div class="sale-item">Nenhuma venda registrada ainda</div>';
+                }
+            });
+        }
+
+        // ===============================
+        // FUNÇÕES DA APLICAÇÃO
+        // ===============================
+
+        function updateCharts() {
+            // Ordenar SDRs por número de contas
+            sdrData.sort((a, b) => b.accounts - a.accounts);
+            
+            // Ordenar Closers por número de contas
+            closerData.sort((a, b) => b.accounts - a.accounts);
+            
+            // Atualizar gráfico de SDRs
+            const sdrChart = document.getElementById('sdr-chart');
+            sdrChart.innerHTML = '';
+            
+            const maxSdrAccounts = Math.max(...sdrData.map(sdr => sdr.accounts), 1);
+            
+            sdrData.forEach((sdr) => {
+                const barHeight = (sdr.accounts / maxSdrAccounts) * 80;
+                
+                const bar = document.createElement('div');
+                bar.className = 'chart-bar';
+                bar.style.height = `${barHeight}%`;
+                bar.innerHTML = `
+                    <div class="chart-bar-value">${sdr.accounts}</div>
+                    <div class="chart-bar-label">${sdr.name}</div>
+                `;
+                sdrChart.appendChild(bar);
+            });
+            
+            // Atualizar gráfico de Closers
+            const closerChart = document.getElementById('closer-chart');
+            closerChart.innerHTML = '';
+            
+            const maxCloserAccounts = Math.max(...closerData.map(closer => closer.accounts), 1);
+            
+            closerData.forEach((closer) => {
+                const barHeight = (closer.accounts / maxCloserAccounts) * 80;
+                
+                const bar = document.createElement('div');
+                bar.className = 'chart-bar';
+                bar.style.height = `${barHeight}%`;
+                bar.innerHTML = `
+                    <div class="chart-bar-value">${closer.accounts}</div>
+                    <div class="chart-bar-label">${closer.name}</div>
+                `;
+                closerChart.appendChild(bar);
+            });
+            
+            // Atualizar estatísticas gerais
+            document.getElementById('total-accounts').textContent = totalAccounts;
+            document.getElementById('total-revenue').textContent = `R$ ${totalRevenue.toLocaleString('pt-BR')}`;
+            
+            // Atualizar barras de progresso
+            const accountsProgress = (totalAccounts / accountsGoal) * 100;
+            document.getElementById('accounts-progress').style.width = `${Math.min(accountsProgress, 100)}%`;
+            
+            const revenueProgress = (totalRevenue / revenueGoal) * 100;
+            document.getElementById('revenue-progress').style.width = `${Math.min(revenueProgress, 100)}%`;
+            
+            // Atualizar SDR do mês
+            const topSdr = sdrData[0];
+            document.getElementById('top-sdr').textContent = topSdr.accounts > 0 ? topSdr.name : "-";
+            document.getElementById('top-sdr-accounts').textContent = `${topSdr.accounts} contas`;
+            
+            // Atualizar Closer do mês
+            const topCloser = closerData[0];
+            document.getElementById('top-closer').textContent = topCloser.accounts > 0 ? topCloser.name : "-";
+            document.getElementById('top-closer-accounts').textContent = `${topCloser.accounts} contas`;
+            
+            // Atualizar conquistas
+            updateAchievements();
+        }
+        
+        function updateAchievements() {
+            const topSdr = sdrData[0];
+            const topCloser = closerData[0];
+            
+            // SDR do Mês
+            const sdrOfMonth = document.querySelector('.achievement:nth-child(3)');
+            sdrOfMonth.querySelector('p').textContent = topSdr.accounts > 0 ? topSdr.name : "-";
+            if (topSdr.accounts > 0) {
+                sdrOfMonth.classList.add('unlocked');
+            } else {
+                sdrOfMonth.classList.remove('unlocked');
+            }
+            
+            // Meta Batida SDR
+            const sdrGoal = document.querySelector('.achievement:nth-child(1)');
+            if (topSdr.accounts >= 34) {
+                sdrGoal.classList.add('unlocked');
+            } else {
+                sdrGoal.classList.remove('unlocked');
+            }
+            
+            // Super Meta SDR
+            const sdrSuperGoal = document.querySelector('.achievement:nth-child(2)');
+            if (topSdr.accounts >= 44) {
+                sdrSuperGoal.classList.add('unlocked');
+            } else {
+                sdrSuperGoal.classList.remove('unlocked');
+            }
+            
+            // Closer do Mês
+            const closerOfMonth = document.querySelector('.achievement:nth-child(6)');
+            closerOfMonth.querySelector('p').textContent = topCloser.accounts > 0 ? topCloser.name : "-";
+            if (topCloser.accounts > 0) {
+                closerOfMonth.classList.add('unlocked');
+            } else {
+                closerOfMonth.classList.remove('unlocked');
+            }
+            
+            // Meta Batida Closer
+            const closerGoal = document.querySelector('.achievement:nth-child(4)');
+            if (topCloser.accounts >= 44) {
+                closerGoal.classList.add('unlocked');
+            } else {
+                closerGoal.classList.remove('unlocked');
+            }
+            
+            // Super Meta Closer
+            const closerSuperGoal = document.querySelector('.achievement:nth-child(5)');
+            if (topCloser.accounts >= 55) {
+                closerSuperGoal.classList.add('unlocked');
+            } else {
+                closerSuperGoal.classList.remove('unlocked');
+            }
+        }
+
+        // FUNÇÃO DE CELEBRAÇÃO
+        function triggerCelebration() {
+            // Criar overlay de celebração
+            const overlay = document.createElement('div');
+            overlay.className = 'celebration-overlay';
+            document.body.appendChild(overlay);
+            
+            // Criar texto de celebração
+            const celebrationText = document.createElement('div');
+            celebrationText.className = 'celebration-text';
+            celebrationText.innerHTML = '🎉 VENDA REGISTRADA! 🎉';
+            document.body.appendChild(celebrationText);
+            
+            // Fogos de artifício com confetti
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#FF6B35', '#FFA726', '#FF4081', '#4CAF50', '#2196F3']
+            });
+            
+            // Mais confetti após delay
+            setTimeout(() => {
+                confetti({
+                    particleCount: 100,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#FF6B35', '#FFA726', '#FF4081']
+                });
+            }, 250);
+            
+            setTimeout(() => {
+                confetti({
+                    particleCount: 100,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#4CAF50', '#2196F3', '#FFA726']
+                });
+            }, 500);
+            
+            // Criar partículas customizadas
+            createCustomParticles();
+            
+            // Limpar elementos após animação
+            setTimeout(() => {
+                overlay.remove();
+                celebrationText.remove();
+            }, 2000);
+        }
+
+        function createCustomParticles() {
+            const colors = ['#FF6B35', '#FFA726', '#FF4081', '#4CAF50', '#2196F3'];
+            for (let i = 0; i < 30; i++) {
+                setTimeout(() => {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    particle.style.left = Math.random() * 100 + 'vw';
+                    particle.style.top = '100vh';
+                    document.body.appendChild(particle);
+                    
+                    // Animação da partícula
+                    const animation = particle.animate([
+                        { transform: 'translateY(0) scale(1)', opacity: 1 },
+                        { transform: `translateY(-${Math.random() * 300 + 200}px) scale(0)`, opacity: 0 }
+                    ], {
+                        duration: Math.random() * 2000 + 1000,
+                        easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)'
+                    });
+                    
+                    animation.onfinish = () => particle.remove();
+                }, i * 100);
+            }
+        }
+        
+        // ===============================
+        // EVENT LISTENERS
+        // ===============================
+
+        const modal = document.getElementById('sale-modal');
+        const openModalBtn = document.getElementById('open-modal');
+        const closeModalBtn = document.getElementById('close-modal');
+        const toast = document.getElementById('success-toast');
+        
+        openModalBtn.addEventListener('click', () => {
+            modal.style.display = 'flex';
+        });
+        
+        closeModalBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+        
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+        
+        function showToast() {
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        document.getElementById('sale-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const userName = document.getElementById('user-name-input').value;
+            const sdr = document.getElementById('sdr').value;
+            const closer = document.getElementById('closer').value;
+            const accounts = parseInt(document.getElementById('accounts').value);
+            const value = parseFloat(document.getElementById('value').value);
+            
+            if (!userName || !sdr || !closer) {
+                alert('Por favor, preencha todos os campos');
+                return;
+            }
+            
+            // Atualizar usuário atual
+            currentUser.name = userName;
+            currentUser.role = sdrData.find(s => s.name === sdr) ? 'SDR' : 'Closer';
+            
+            document.getElementById('user-name').textContent = currentUser.name;
+            document.getElementById('user-role').textContent = currentUser.role;
+            document.getElementById('user-avatar').textContent = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
+            
+            // Atualizar dados do SDR
+            const sdrIndex = sdrData.findIndex(s => s.name === sdr);
+            if (sdrIndex !== -1) {
+                sdrData[sdrIndex].accounts += accounts;
+            }
+            
+            // Atualizar dados do Closer
+            const closerIndex = closerData.findIndex(c => c.name === closer);
+            if (closerIndex !== -1) {
+                closerData[closerIndex].accounts += accounts;
+            }
+            
+            // Atualizar totais
+            totalAccounts += accounts;
+            totalRevenue += value;
+            
+            // Salvar no Firebase
+            saveDataToFirebase();
+            addRecentSale({ sdr, closer, accounts, value });
+            
+            // Atualizar gráficos
+            updateCharts();
+            
+            // Limpar formulário e fechar modal
+            document.getElementById('sale-form').reset();
+            document.getElementById('accounts').value = 1;
+            modal.style.display = 'none';
+            
+            // Acionar celebração
+            triggerCelebration();
+            
+            showToast();
+        });
+
+        // ===============================
+        // INICIALIZAÇÃO
+        // ===============================
+
+        // Iniciar ouvindo mudanças do Firebase
+        listenToFirebaseChanges();
+        loadRecentSales();
+        updateCharts();
+
+        // Carregar dados iniciais do Firebase
+        database.ref('salesData').once('value').then((snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                sdrData = data.sdrData || sdrData;
+                closerData = data.closerData || closerData;
+                totalAccounts = data.totalAccounts || 0;
+                totalRevenue = data.totalRevenue || 0;
+                updateCharts();
+            }
+        });
+    </script>
+</body>
+</html>
