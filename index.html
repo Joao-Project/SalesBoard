@@ -14,6 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <style>
+        /* Estilos anteriores mantidos */
         :root {
             --primary: #FF6B35;
             --primary-dark: #E55A2B;
@@ -667,6 +668,48 @@
             z-index: 9999;
         }
         
+        /* Estilos para o botão de venda direta */
+        .direct-sale-btn {
+            position: fixed;
+            bottom: 120px;
+            right: 30px;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            z-index: 100;
+        }
+        
+        .direct-sale-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.7);
+        }
+        
+        .direct-sale-indicator {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--accent);
+            color: white;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        
         @media (max-width: 1400px) {
             .stats-overview {
                 grid-template-columns: repeat(3, 1fr);
@@ -725,6 +768,11 @@
                 margin-left: 0;
                 width: 100%;
                 justify-content: flex-end;
+            }
+            
+            .direct-sale-btn {
+                bottom: 110px;
+                right: 25px;
             }
         }
     </style>
@@ -909,6 +957,12 @@
             <i class="fas fa-plus"></i>
         </div>
         
+        <div class="direct-sale-btn" id="open-direct-modal">
+            <i class="fas fa-bolt"></i>
+            <div class="direct-sale-indicator">DIR</div>
+        </div>
+        
+        <!-- Modal de Venda Normal -->
         <div class="modal" id="sale-modal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -975,6 +1029,64 @@
             </div>
         </div>
         
+        <!-- Modal de Venda Direta -->
+        <div class="modal" id="direct-sale-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Registrar Venda Direta</h2>
+                    <button class="close-modal" id="close-direct-modal">&times;</button>
+                </div>
+                <form id="direct-sale-form">
+                    <div class="form-group">
+                        <label for="direct-user-name-input">Seu Nome</label>
+                        <div class="input-container">
+                            <input type="text" id="direct-user-name-input" placeholder="Digite seu nome" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="direct-seller">Vendedor</label>
+                        <div class="custom-select">
+                            <select id="direct-seller" required>
+                                <option value="">Selecione um Vendedor</option>
+                                <option value="Alex Neder">Alex Neder</option>
+                                <option value="João Martins">João Martins</option>
+                                <option value="Gabriel Ferreira">Gabriel Ferreira</option>
+                                <option value="Charles Muller">Charles Muller</option>
+                                <option value="Davi">Davi</option>
+                                <option value="João Henrique">João Henrique</option>
+                                <option value="João Guilherme">João Guilherme</option>
+                                <option value="Diego">Diego</option>
+                                <option value="Josue">Josue</option>
+                                <option value="Thiago Parreira">Thiago Parreira</option>
+                                <option value="Outro">Outro</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" id="custom-seller-group" style="display: none;">
+                        <label for="custom-seller">Nome do Vendedor</label>
+                        <div class="input-container">
+                            <input type="text" id="custom-seller" placeholder="Digite o nome do vendedor">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="direct-accounts">Número de Contas</label>
+                        <div class="input-container">
+                            <input type="number" id="direct-accounts" min="1" max="10" value="1" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="direct-value">Valor Total (R$)</label>
+                        <div class="input-container">
+                            <input type="number" id="direct-value" min="0" step="0.01" placeholder="Ex: 2500.00" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-bolt"></i> Registrar Venda Direta
+                    </button>
+                </form>
+            </div>
+        </div>
+        
         <div class="toast" id="success-toast">
             <div class="toast-icon">
                 <i class="fas fa-check-circle"></i>
@@ -1027,6 +1139,9 @@
             { name: "Thiago Parreira", accounts: 0 }
         ];
         
+        // Novo array para vendas diretas
+        let directSalesData = [];
+        
         let totalAccounts = 0;
         let totalRevenue = 0;
         const revenueGoal = 526680;
@@ -1047,6 +1162,7 @@
                 sdrData: sdrData,
                 sdrResgateData: sdrResgateData,
                 closerData: closerData,
+                directSalesData: directSalesData,
                 totalAccounts: totalAccounts,
                 totalRevenue: totalRevenue,
                 lastUpdate: new Date().toISOString()
@@ -1065,6 +1181,7 @@
                     sdrData = data.sdrData || sdrData;
                     sdrResgateData = data.sdrResgateData || sdrResgateData;
                     closerData = data.closerData || closerData;
+                    directSalesData = data.directSalesData || directSalesData;
                     totalAccounts = data.totalAccounts || 0;
                     totalRevenue = data.totalRevenue || 0;
                     
@@ -1117,9 +1234,19 @@
                         }
                         
                         // Atualizar Closer
-                        const closerIndex = closerData.findIndex(c => c.name === saleData.closer);
-                        if (closerIndex !== -1) {
-                            closerData[closerIndex].accounts -= saleData.accounts;
+                        if (saleData.closer) {
+                            const closerIndex = closerData.findIndex(c => c.name === saleData.closer);
+                            if (closerIndex !== -1) {
+                                closerData[closerIndex].accounts -= saleData.accounts;
+                            }
+                        }
+                        
+                        // Atualizar Venda Direta se existir
+                        if (saleData.directSeller) {
+                            const directIndex = directSalesData.findIndex(d => d.name === saleData.directSeller);
+                            if (directIndex !== -1) {
+                                directSalesData[directIndex].accounts -= saleData.accounts;
+                            }
                         }
                         
                         // Salvar dados atualizados
@@ -1150,7 +1277,10 @@
                         saleItem.className = 'sale-item';
                         
                         let sellerInfo = '';
-                        if (sale.sdr && sale.sdrResgate) {
+                        if (sale.directSeller) {
+                            sellerInfo = `Venda Direta: ${sale.directSeller}`;
+                            saleItem.style.borderLeftColor = '#4CAF50'; // Verde para vendas diretas
+                        } else if (sale.sdr && sale.sdrResgate) {
                             sellerInfo = `${sale.sdr} + ${sale.sdrResgate}`;
                         } else if (sale.sdr) {
                             sellerInfo = sale.sdr;
@@ -1158,9 +1288,11 @@
                             sellerInfo = sale.sdrResgate;
                         }
                         
+                        const closerInfo = sale.closer ? ` → ${sale.closer}` : '';
+                        
                         saleItem.innerHTML = `
                             <div class="sale-info">
-                                <div><strong>${sale.user}</strong> - ${sellerInfo} → ${sale.closer}</div>
+                                <div><strong>${sale.user}</strong> - ${sellerInfo}${closerInfo}</div>
                                 <div>
                                     ${sale.accounts} conta(s) - R$ ${sale.value.toLocaleString('pt-BR')} 
                                     <small style="color: var(--text-secondary); font-size: 0.8rem;">
@@ -1195,6 +1327,9 @@
             
             // Ordenar Closers por número de contas
             closerData.sort((a, b) => b.accounts - a.accounts);
+            
+            // Ordenar Vendas Diretas por número de contas
+            directSalesData.sort((a, b) => b.accounts - a.accounts);
             
             // Atualizar gráfico de SDRs
             const sdrChart = document.getElementById('sdr-chart');
@@ -1438,21 +1573,45 @@
         // ===============================
 
         const modal = document.getElementById('sale-modal');
+        const directModal = document.getElementById('direct-sale-modal');
         const openModalBtn = document.getElementById('open-modal');
+        const openDirectModalBtn = document.getElementById('open-direct-modal');
         const closeModalBtn = document.getElementById('close-modal');
+        const closeDirectModalBtn = document.getElementById('close-direct-modal');
         const toast = document.getElementById('success-toast');
         
         openModalBtn.addEventListener('click', () => {
             modal.style.display = 'flex';
         });
         
+        openDirectModalBtn.addEventListener('click', () => {
+            directModal.style.display = 'flex';
+        });
+        
         closeModalBtn.addEventListener('click', () => {
             modal.style.display = 'none';
+        });
+        
+        closeDirectModalBtn.addEventListener('click', () => {
+            directModal.style.display = 'none';
         });
         
         window.addEventListener('click', (e) => {
             if (e.target === modal) {
                 modal.style.display = 'none';
+            }
+            if (e.target === directModal) {
+                directModal.style.display = 'none';
+            }
+        });
+        
+        // Mostrar/ocultar campo de vendedor personalizado
+        document.getElementById('direct-seller').addEventListener('change', function() {
+            const customSellerGroup = document.getElementById('custom-seller-group');
+            if (this.value === 'Outro') {
+                customSellerGroup.style.display = 'block';
+            } else {
+                customSellerGroup.style.display = 'none';
             }
         });
         
@@ -1463,6 +1622,7 @@
             }, 3000);
         }
         
+        // Formulário de venda normal
         document.getElementById('sale-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -1531,6 +1691,87 @@
             showToast();
         });
 
+        // Formulário de venda direta
+        document.getElementById('direct-sale-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const userName = document.getElementById('direct-user-name-input').value;
+            const seller = document.getElementById('direct-seller').value;
+            const customSeller = document.getElementById('custom-seller').value;
+            const accounts = parseInt(document.getElementById('direct-accounts').value);
+            const value = parseFloat(document.getElementById('direct-value').value);
+            
+            // Validação
+            if (!userName || !seller) {
+                alert('Por favor, preencha seu nome e selecione um vendedor');
+                return;
+            }
+            
+            if (seller === 'Outro' && !customSeller) {
+                alert('Por favor, digite o nome do vendedor');
+                return;
+            }
+            
+            // Determinar o nome final do vendedor
+            const finalSeller = seller === 'Outro' ? customSeller : seller;
+            
+            // Atualizar usuário atual
+            currentUser.name = userName;
+            currentUser.role = 'Venda Direta';
+            
+            document.getElementById('user-name').textContent = currentUser.name;
+            document.getElementById('user-role').textContent = currentUser.role;
+            document.getElementById('user-avatar').textContent = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
+            
+            // Atualizar dados de vendas diretas
+            let sellerIndex = directSalesData.findIndex(d => d.name === finalSeller);
+            if (sellerIndex === -1) {
+                // Adicionar novo vendedor
+                directSalesData.push({ name: finalSeller, accounts: accounts });
+            } else {
+                // Atualizar vendedor existente
+                directSalesData[sellerIndex].accounts += accounts;
+            }
+            
+            // Atualizar também nos arrays de SDR, SDR Resgate ou Closer se o vendedor existir neles
+            const sdrIndex = sdrData.findIndex(s => s.name === finalSeller);
+            if (sdrIndex !== -1) {
+                sdrData[sdrIndex].accounts += accounts;
+            }
+            
+            const sdrResgateIndex = sdrResgateData.findIndex(s => s.name === finalSeller);
+            if (sdrResgateIndex !== -1) {
+                sdrResgateData[sdrResgateIndex].accounts += accounts;
+            }
+            
+            const closerIndex = closerData.findIndex(c => c.name === finalSeller);
+            if (closerIndex !== -1) {
+                closerData[closerIndex].accounts += accounts;
+            }
+            
+            // Atualizar totais
+            totalAccounts += accounts;
+            totalRevenue += value;
+            
+            // Salvar no Firebase
+            saveDataToFirebase();
+            addRecentSale({ directSeller: finalSeller, accounts, value });
+            
+            // Atualizar gráficos
+            updateCharts();
+            
+            // Limpar formulário e fechar modal
+            document.getElementById('direct-sale-form').reset();
+            document.getElementById('direct-accounts').value = 1;
+            document.getElementById('custom-seller-group').style.display = 'none';
+            directModal.style.display = 'none';
+            
+            // Acionar celebração
+            triggerCelebration();
+            
+            showToast();
+        });
+
         // ===============================
         // INICIALIZAÇÃO
         // ===============================
@@ -1547,6 +1788,7 @@
                 sdrData = data.sdrData || sdrData;
                 sdrResgateData = data.sdrResgateData || sdrResgateData;
                 closerData = data.closerData || closerData;
+                directSalesData = data.directSalesData || directSalesData;
                 totalAccounts = data.totalAccounts || 0;
                 totalRevenue = data.totalRevenue || 0;
                 updateCharts();
