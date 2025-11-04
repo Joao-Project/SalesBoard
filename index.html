@@ -1209,6 +1209,44 @@
         // FUNÇÕES DO FIREBASE
         // ===============================
 
+        // Função para limpar e corrigir dados corrompidos
+        function cleanCorruptedData(data) {
+            // Limpar dados de SDR
+            if (data.sdrData) {
+                data.sdrData = data.sdrData.map(sdr => ({
+                    name: sdr.name || "Desconhecido",
+                    accounts: Number(sdr.accounts) || 0,
+                    revenue: Number(sdr.revenue) || 0
+                }));
+            }
+            
+            // Limpar dados de SDR Resgate
+            if (data.sdrResgateData) {
+                data.sdrResgateData = data.sdrResgateData.map(sdr => ({
+                    name: sdr.name || "Desconhecido",
+                    accounts: Number(sdr.accounts) || 0,
+                    revenue: Number(sdr.revenue) || 0
+                }));
+            }
+            
+            // Limpar dados de Closer
+            if (data.closerData) {
+                data.closerData = data.closerData.map(closer => ({
+                    name: closer.name || "Desconhecido",
+                    accounts: Number(closer.accounts) || 0,
+                    revenue: Number(closer.revenue) || 0
+                }));
+            }
+            
+            // Limpar totais
+            data.totalAccounts = Number(data.totalAccounts) || 0;
+            data.totalRevenue = Number(data.totalRevenue) || 0;
+            data.totalResgateAccounts = Number(data.totalResgateAccounts) || 0;
+            data.totalResgateRevenue = Number(data.totalResgateRevenue) || 0;
+            
+            return data;
+        }
+
         // Salvar dados no Firebase
         function saveDataToFirebase() {
             const data = {
@@ -1223,9 +1261,27 @@
                 lastUpdate: new Date().toISOString()
             };
             
-            database.ref('salesData').set(data)
+            // Limpar dados antes de salvar
+            const cleanedData = cleanCorruptedData(data);
+            
+            database.ref('salesData').set(cleanedData)
                 .then(() => console.log("Dados salvos no Firebase"))
-                .catch((error) => console.error("Erro ao salvar:", error));
+                .catch((error) => {
+                    console.error("Erro ao salvar:", error);
+                    // Tentar salvar sem os dados problemáticos
+                    const safeData = {
+                        sdrData: sdrData.map(sdr => ({ name: sdr.name, accounts: sdr.accounts, revenue: sdr.revenue })),
+                        sdrResgateData: sdrResgateData.map(sdr => ({ name: sdr.name, accounts: sdr.accounts, revenue: sdr.revenue })),
+                        closerData: closerData.map(closer => ({ name: closer.name, accounts: closer.accounts, revenue: closer.revenue })),
+                        totalAccounts: totalAccounts,
+                        totalRevenue: totalRevenue,
+                        totalResgateAccounts: totalResgateAccounts,
+                        totalResgateRevenue: totalResgateRevenue,
+                        lastUpdate: new Date().toISOString()
+                    };
+                    
+                    return database.ref('salesData').set(safeData);
+                });
         }
 
         // Ouvir mudanças no Firebase
@@ -1233,19 +1289,59 @@
             database.ref('salesData').on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
-                    sdrData = data.sdrData || sdrData;
-                    sdrResgateData = data.sdrResgateData || sdrResgateData;
-                    closerData = data.closerData || closerData;
-                    directSalesData = data.directSalesData || directSalesData;
-                    totalAccounts = data.totalAccounts || 0;
-                    totalRevenue = data.totalRevenue || 0;
-                    totalResgateAccounts = data.totalResgateAccounts || 0;
-                    totalResgateRevenue = data.totalResgateRevenue || 0;
-                    
-                    updateCharts();
-                    console.log("Dados atualizados do Firebase");
+                    try {
+                        // Limpar dados corrompidos
+                        const cleanedData = cleanCorruptedData(data);
+                        
+                        sdrData = cleanedData.sdrData || sdrData;
+                        sdrResgateData = cleanedData.sdrResgateData || sdrResgateData;
+                        closerData = cleanedData.closerData || closerData;
+                        directSalesData = cleanedData.directSalesData || directSalesData;
+                        totalAccounts = cleanedData.totalAccounts || 0;
+                        totalRevenue = cleanedData.totalRevenue || 0;
+                        totalResgateAccounts = cleanedData.totalResgateAccounts || 0;
+                        totalResgateRevenue = cleanedData.totalResgateRevenue || 0;
+                        
+                        updateCharts();
+                        console.log("Dados atualizados do Firebase");
+                    } catch (error) {
+                        console.error("Erro ao processar dados do Firebase:", error);
+                        // Resetar dados em caso de erro
+                        resetData();
+                    }
                 }
             });
+        }
+
+        // Resetar dados em caso de corrupção
+        function resetData() {
+            sdrData = [
+                { name: "Alex Neder", accounts: 0, revenue: 0 },
+                { name: "João Martins", accounts: 0, revenue: 0 },
+                { name: "Gabriel Ferreira", accounts: 0, revenue: 0 },
+                { name: "Charles Muller", accounts: 0, revenue: 0 }
+            ];
+            
+            sdrResgateData = [
+                { name: "Davi", accounts: 0, revenue: 0 },
+                { name: "João Henrique", accounts: 0, revenue: 0 },
+                { name: "João Guilherme", accounts: 0, revenue: 0 }
+            ];
+            
+            closerData = [
+                { name: "Diego", accounts: 0, revenue: 0 },
+                { name: "Josue", accounts: 0, revenue: 0 },
+                { name: "Thiago Parreira", accounts: 0, revenue: 0 }
+            ];
+            
+            directSalesData = [];
+            totalAccounts = 0;
+            totalRevenue = 0;
+            totalResgateAccounts = 0;
+            totalResgateRevenue = 0;
+            
+            saveDataToFirebase();
+            updateCharts();
         }
 
         // Adicionar venda recente
@@ -1256,6 +1352,10 @@
             saleData.timestamp = new Date().toISOString();
             saleData.user = currentUser.name;
             saleData.id = newSaleRef.key;
+            
+            // Garantir que os valores sejam números
+            saleData.accounts = Number(saleData.accounts) || 0;
+            saleData.value = Number(saleData.value) || 0;
             
             newSaleRef.set(saleData)
                 .then(() => console.log("Venda recente salva"))
@@ -1270,16 +1370,20 @@
                     .then(() => {
                         console.log("Venda excluída do Firebase");
                         
+                        // Garantir que os valores sejam números
+                        const accounts = Number(saleData.accounts) || 0;
+                        const value = Number(saleData.value) || 0;
+                        
                         // Atualizar contadores
-                        totalAccounts -= saleData.accounts;
-                        totalRevenue -= saleData.value;
+                        totalAccounts -= accounts;
+                        totalRevenue -= value;
                         
                         // Atualizar SDR se existir
                         if (saleData.sdr) {
                             const sdrIndex = sdrData.findIndex(s => s.name === saleData.sdr);
                             if (sdrIndex !== -1) {
-                                sdrData[sdrIndex].accounts -= saleData.accounts;
-                                sdrData[sdrIndex].revenue -= saleData.value;
+                                sdrData[sdrIndex].accounts -= accounts;
+                                sdrData[sdrIndex].revenue -= value;
                             }
                         }
                         
@@ -1287,10 +1391,10 @@
                         if (saleData.sdrResgate) {
                             const sdrResgateIndex = sdrResgateData.findIndex(s => s.name === saleData.sdrResgate);
                             if (sdrResgateIndex !== -1) {
-                                sdrResgateData[sdrResgateIndex].accounts -= saleData.accounts;
-                                sdrResgateData[sdrResgateIndex].revenue -= saleData.value;
-                                totalResgateAccounts -= saleData.accounts;
-                                totalResgateRevenue -= saleData.value;
+                                sdrResgateData[sdrResgateIndex].accounts -= accounts;
+                                sdrResgateData[sdrResgateIndex].revenue -= value;
+                                totalResgateAccounts -= accounts;
+                                totalResgateRevenue -= value;
                             }
                         }
                         
@@ -1298,8 +1402,8 @@
                         if (saleData.closer) {
                             const closerIndex = closerData.findIndex(c => c.name === saleData.closer);
                             if (closerIndex !== -1) {
-                                closerData[closerIndex].accounts -= saleData.accounts;
-                                closerData[closerIndex].revenue -= saleData.value;
+                                closerData[closerIndex].accounts -= accounts;
+                                closerData[closerIndex].revenue -= value;
                             }
                         }
                         
@@ -1307,8 +1411,8 @@
                         if (saleData.directSeller) {
                             const directIndex = directSalesData.findIndex(d => d.name === saleData.directSeller);
                             if (directIndex !== -1) {
-                                directSalesData[directIndex].accounts -= saleData.accounts;
-                                directSalesData[directIndex].revenue -= saleData.value;
+                                directSalesData[directIndex].accounts -= accounts;
+                                directSalesData[directIndex].revenue -= value;
                             }
                         }
                         
@@ -1343,6 +1447,12 @@
                     }
                     
                     salesArray.forEach(([saleId, sale]) => {
+                        // Garantir que os valores existam
+                        const accounts = Number(sale.accounts) || 0;
+                        const value = Number(sale.value) || 0;
+                        const timestamp = sale.timestamp ? new Date(sale.timestamp) : new Date();
+                        const user = sale.user || "Desconhecido";
+                        
                         const saleItem = document.createElement('div');
                         saleItem.className = 'sale-item';
                         
@@ -1363,11 +1473,11 @@
                         
                         saleItem.innerHTML = `
                             <div class="sale-info">
-                                <div><strong>${sale.user}</strong> - ${sellerInfo}${closerInfo}</div>
+                                <div><strong>${user}</strong> - ${sellerInfo}${closerInfo}</div>
                                 <div>
-                                    ${sale.accounts} conta(s) - R$ ${sale.value.toLocaleString('pt-BR')} 
+                                    ${accounts} conta(s) - R$ ${value.toLocaleString('pt-BR')} 
                                     <small style="color: var(--text-secondary); font-size: 0.8rem;">
-                                        ${new Date(sale.timestamp).toLocaleString('pt-BR')}
+                                        ${timestamp.toLocaleString('pt-BR')}
                                     </small>
                                 </div>
                             </div>
@@ -1390,180 +1500,192 @@
         // ===============================
 
         function updateCharts() {
-            // Ordenar SDRs por faturamento
-            sdrData.sort((a, b) => b.revenue - a.revenue);
-            
-            // Ordenar SDRs Resgate por faturamento
-            sdrResgateData.sort((a, b) => b.revenue - a.revenue);
-            
-            // Ordenar Closers por número de contas
-            closerData.sort((a, b) => b.accounts - a.accounts);
-            
-            // Ordenar Vendas Diretas por número de contas
-            directSalesData.sort((a, b) => b.accounts - a.accounts);
-            
-            // Atualizar gráfico de SDRs
-            const sdrChart = document.getElementById('sdr-chart');
-            sdrChart.innerHTML = '';
-            
-            const maxSdrRevenue = Math.max(...sdrData.map(sdr => sdr.revenue), 1);
-            
-            sdrData.forEach((sdr) => {
-                const barHeight = (sdr.revenue / maxSdrRevenue) * 80;
+            try {
+                // Ordenar SDRs por faturamento
+                sdrData.sort((a, b) => (b.revenue || 0) - (a.revenue || 0));
                 
-                const bar = document.createElement('div');
-                bar.className = 'chart-bar';
-                bar.style.height = `${barHeight}%`;
-                bar.innerHTML = `
-                    <div class="chart-bar-value">R$ ${Math.round(sdr.revenue).toLocaleString('pt-BR')}</div>
-                    <div class="chart-bar-accounts">${sdr.accounts} contas</div>
-                    <div class="chart-bar-label">${sdr.name}</div>
-                `;
+                // Ordenar SDRs Resgate por faturamento
+                sdrResgateData.sort((a, b) => (b.revenue || 0) - (a.revenue || 0));
                 
-                // Adicionar tooltip
-                const tooltip = document.createElement('div');
-                tooltip.className = 'chart-tooltip';
-                tooltip.textContent = `Faturamento: R$ ${sdr.revenue.toLocaleString('pt-BR')} | Contas: ${sdr.accounts}`;
-                bar.appendChild(tooltip);
+                // Ordenar Closers por número de contas
+                closerData.sort((a, b) => (b.accounts || 0) - (a.accounts || 0));
                 
-                // Eventos para tooltip
-                bar.addEventListener('mouseenter', function(e) {
-                    tooltip.style.opacity = '1';
-                    tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
-                    tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
+                // Ordenar Vendas Diretas por número de contas
+                directSalesData.sort((a, b) => (b.accounts || 0) - (a.accounts || 0));
+                
+                // Atualizar gráfico de SDRs
+                const sdrChart = document.getElementById('sdr-chart');
+                sdrChart.innerHTML = '';
+                
+                const maxSdrRevenue = Math.max(...sdrData.map(sdr => sdr.revenue || 0), 1);
+                
+                sdrData.forEach((sdr) => {
+                    const revenue = sdr.revenue || 0;
+                    const accounts = sdr.accounts || 0;
+                    const barHeight = (revenue / maxSdrRevenue) * 80;
+                    
+                    const bar = document.createElement('div');
+                    bar.className = 'chart-bar';
+                    bar.style.height = `${barHeight}%`;
+                    bar.innerHTML = `
+                        <div class="chart-bar-value">R$ ${Math.round(revenue).toLocaleString('pt-BR')}</div>
+                        <div class="chart-bar-accounts">${accounts} contas</div>
+                        <div class="chart-bar-label">${sdr.name}</div>
+                    `;
+                    
+                    // Adicionar tooltip
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'chart-tooltip';
+                    tooltip.textContent = `Faturamento: R$ ${revenue.toLocaleString('pt-BR')} | Contas: ${accounts}`;
+                    bar.appendChild(tooltip);
+                    
+                    // Eventos para tooltip
+                    bar.addEventListener('mouseenter', function(e) {
+                        tooltip.style.opacity = '1';
+                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
+                        tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
+                    });
+                    
+                    bar.addEventListener('mousemove', function(e) {
+                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
+                        tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
+                    });
+                    
+                    bar.addEventListener('mouseleave', function() {
+                        tooltip.style.opacity = '0';
+                    });
+                    
+                    sdrChart.appendChild(bar);
                 });
                 
-                bar.addEventListener('mousemove', function(e) {
-                    tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
-                    tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
+                // Atualizar gráfico de Closers
+                const closerChart = document.getElementById('closer-chart');
+                closerChart.innerHTML = '';
+                
+                const maxCloserAccounts = Math.max(...closerData.map(closer => closer.accounts || 0), 1);
+                
+                closerData.forEach((closer) => {
+                    const accounts = closer.accounts || 0;
+                    const revenue = closer.revenue || 0;
+                    const barHeight = (accounts / maxCloserAccounts) * 80;
+                    
+                    const bar = document.createElement('div');
+                    bar.className = 'chart-bar';
+                    bar.style.height = `${barHeight}%`;
+                    bar.innerHTML = `
+                        <div class="chart-bar-value">${accounts}</div>
+                        <div class="chart-bar-label">${closer.name}</div>
+                    `;
+                    
+                    // Adicionar tooltip
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'chart-tooltip';
+                    tooltip.textContent = `Contas: ${accounts} | Faturamento: R$ ${revenue.toLocaleString('pt-BR')}`;
+                    bar.appendChild(tooltip);
+                    
+                    // Eventos para tooltip
+                    bar.addEventListener('mouseenter', function(e) {
+                        tooltip.style.opacity = '1';
+                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
+                        tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
+                    });
+                    
+                    bar.addEventListener('mousemove', function(e) {
+                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
+                        tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
+                    });
+                    
+                    bar.addEventListener('mouseleave', function() {
+                        tooltip.style.opacity = '0';
+                    });
+                    
+                    closerChart.appendChild(bar);
                 });
                 
-                bar.addEventListener('mouseleave', function() {
-                    tooltip.style.opacity = '0';
+                // Atualizar gráfico de SDR Resgate
+                const sdrResgateChart = document.getElementById('sdr-resgate-chart');
+                sdrResgateChart.innerHTML = '';
+                
+                const maxSdrResgateRevenue = Math.max(...sdrResgateData.map(sdr => sdr.revenue || 0), 1);
+                
+                sdrResgateData.forEach((sdr) => {
+                    const revenue = sdr.revenue || 0;
+                    const accounts = sdr.accounts || 0;
+                    const barHeight = (revenue / maxSdrResgateRevenue) * 80;
+                    
+                    const bar = document.createElement('div');
+                    bar.className = 'chart-bar resgate';
+                    bar.style.height = `${barHeight}%`;
+                    bar.innerHTML = `
+                        <div class="chart-bar-value">R$ ${Math.round(revenue).toLocaleString('pt-BR')}</div>
+                        <div class="chart-bar-accounts">${accounts} contas</div>
+                        <div class="chart-bar-label">${sdr.name}</div>
+                    `;
+                    
+                    // Adicionar tooltip
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'chart-tooltip';
+                    tooltip.textContent = `Faturamento: R$ ${revenue.toLocaleString('pt-BR')} | Contas: ${accounts}`;
+                    bar.appendChild(tooltip);
+                    
+                    // Eventos para tooltip
+                    bar.addEventListener('mouseenter', function(e) {
+                        tooltip.style.opacity = '1';
+                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
+                        tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
+                    });
+                    
+                    bar.addEventListener('mousemove', function(e) {
+                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
+                        tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
+                    });
+                    
+                    bar.addEventListener('mouseleave', function() {
+                        tooltip.style.opacity = '0';
+                    });
+                    
+                    sdrResgateChart.appendChild(bar);
                 });
                 
-                sdrChart.appendChild(bar);
-            });
-            
-            // Atualizar gráfico de Closers
-            const closerChart = document.getElementById('closer-chart');
-            closerChart.innerHTML = '';
-            
-            const maxCloserAccounts = Math.max(...closerData.map(closer => closer.accounts), 1);
-            
-            closerData.forEach((closer) => {
-                const barHeight = (closer.accounts / maxCloserAccounts) * 80;
+                // Atualizar estatísticas gerais
+                document.getElementById('total-accounts').textContent = totalAccounts;
+                document.getElementById('total-revenue').textContent = `R$ ${totalRevenue.toLocaleString('pt-BR')}`;
                 
-                const bar = document.createElement('div');
-                bar.className = 'chart-bar';
-                bar.style.height = `${barHeight}%`;
-                bar.innerHTML = `
-                    <div class="chart-bar-value">${closer.accounts}</div>
-                    <div class="chart-bar-label">${closer.name}</div>
-                `;
+                // Atualizar contadores de SDR Resgate
+                document.getElementById('total-sdr-resgate').textContent = `R$ ${totalResgateRevenue.toLocaleString('pt-BR')}`;
                 
-                // Adicionar tooltip
-                const tooltip = document.createElement('div');
-                tooltip.className = 'chart-tooltip';
-                tooltip.textContent = `Contas: ${closer.accounts} | Faturamento: R$ ${closer.revenue.toLocaleString('pt-BR')}`;
-                bar.appendChild(tooltip);
+                // Atualizar barras de progresso
+                const accountsProgress = (totalAccounts / accountsGoal) * 100;
+                document.getElementById('accounts-progress').style.width = `${Math.min(accountsProgress, 100)}%`;
                 
-                // Eventos para tooltip
-                bar.addEventListener('mouseenter', function(e) {
-                    tooltip.style.opacity = '1';
-                    tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
-                    tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
-                });
+                const revenueProgress = (totalRevenue / revenueGoal) * 100;
+                document.getElementById('revenue-progress').style.width = `${Math.min(revenueProgress, 100)}%`;
                 
-                bar.addEventListener('mousemove', function(e) {
-                    tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
-                    tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
-                });
+                const resgateProgress = (totalResgateAccounts / resgateGoal) * 100;
+                document.getElementById('resgate-progress').style.width = `${Math.min(resgateProgress, 100)}%`;
                 
-                bar.addEventListener('mouseleave', function() {
-                    tooltip.style.opacity = '0';
-                });
+                // Atualizar SDR do mês
+                const topSdr = sdrData[0];
+                document.getElementById('top-sdr').textContent = (topSdr.revenue || 0) > 0 ? topSdr.name : "-";
+                document.getElementById('top-sdr-accounts').textContent = `${topSdr.accounts || 0} contas`;
                 
-                closerChart.appendChild(bar);
-            });
-            
-            // Atualizar gráfico de SDR Resgate
-            const sdrResgateChart = document.getElementById('sdr-resgate-chart');
-            sdrResgateChart.innerHTML = '';
-            
-            const maxSdrResgateRevenue = Math.max(...sdrResgateData.map(sdr => sdr.revenue), 1);
-            
-            sdrResgateData.forEach((sdr) => {
-                const barHeight = (sdr.revenue / maxSdrResgateRevenue) * 80;
+                // Atualizar Closer do mês
+                const topCloser = closerData[0];
+                document.getElementById('top-closer').textContent = (topCloser.accounts || 0) > 0 ? topCloser.name : "-";
+                document.getElementById('top-closer-accounts').textContent = `${topCloser.accounts || 0} contas`;
                 
-                const bar = document.createElement('div');
-                bar.className = 'chart-bar resgate';
-                bar.style.height = `${barHeight}%`;
-                bar.innerHTML = `
-                    <div class="chart-bar-value">R$ ${Math.round(sdr.revenue).toLocaleString('pt-BR')}</div>
-                    <div class="chart-bar-accounts">${sdr.accounts} contas</div>
-                    <div class="chart-bar-label">${sdr.name}</div>
-                `;
+                // Atualizar SDR Resgate do mês
+                const topSdrResgate = sdrResgateData[0];
+                document.getElementById('top-sdr-resgate').textContent = (topSdrResgate.revenue || 0) > 0 ? topSdrResgate.name : "-";
+                document.getElementById('top-sdr-resgate-accounts').textContent = `${topSdrResgate.accounts || 0} contas`;
                 
-                // Adicionar tooltip
-                const tooltip = document.createElement('div');
-                tooltip.className = 'chart-tooltip';
-                tooltip.textContent = `Faturamento: R$ ${sdr.revenue.toLocaleString('pt-BR')} | Contas: ${sdr.accounts}`;
-                bar.appendChild(tooltip);
-                
-                // Eventos para tooltip
-                bar.addEventListener('mouseenter', function(e) {
-                    tooltip.style.opacity = '1';
-                    tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
-                    tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
-                });
-                
-                bar.addEventListener('mousemove', function(e) {
-                    tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
-                    tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
-                });
-                
-                bar.addEventListener('mouseleave', function() {
-                    tooltip.style.opacity = '0';
-                });
-                
-                sdrResgateChart.appendChild(bar);
-            });
-            
-            // Atualizar estatísticas gerais
-            document.getElementById('total-accounts').textContent = totalAccounts;
-            document.getElementById('total-revenue').textContent = `R$ ${totalRevenue.toLocaleString('pt-BR')}`;
-            
-            // Atualizar contadores de SDR Resgate
-            document.getElementById('total-sdr-resgate').textContent = `R$ ${totalResgateRevenue.toLocaleString('pt-BR')}`;
-            
-            // Atualizar barras de progresso
-            const accountsProgress = (totalAccounts / accountsGoal) * 100;
-            document.getElementById('accounts-progress').style.width = `${Math.min(accountsProgress, 100)}%`;
-            
-            const revenueProgress = (totalRevenue / revenueGoal) * 100;
-            document.getElementById('revenue-progress').style.width = `${Math.min(revenueProgress, 100)}%`;
-            
-            const resgateProgress = (totalResgateAccounts / resgateGoal) * 100;
-            document.getElementById('resgate-progress').style.width = `${Math.min(resgateProgress, 100)}%`;
-            
-            // Atualizar SDR do mês
-            const topSdr = sdrData[0];
-            document.getElementById('top-sdr').textContent = topSdr.revenue > 0 ? topSdr.name : "-";
-            document.getElementById('top-sdr-accounts').textContent = `${topSdr.accounts} contas`;
-            
-            // Atualizar Closer do mês
-            const topCloser = closerData[0];
-            document.getElementById('top-closer').textContent = topCloser.accounts > 0 ? topCloser.name : "-";
-            document.getElementById('top-closer-accounts').textContent = `${topCloser.accounts} contas`;
-            
-            // Atualizar SDR Resgate do mês
-            const topSdrResgate = sdrResgateData[0];
-            document.getElementById('top-sdr-resgate').textContent = topSdrResgate.revenue > 0 ? topSdrResgate.name : "-";
-            document.getElementById('top-sdr-resgate-accounts').textContent = `${topSdrResgate.accounts} contas`;
-            
-            // Atualizar conquistas
-            updateAchievements();
+                // Atualizar conquistas
+                updateAchievements();
+            } catch (error) {
+                console.error("Erro ao atualizar gráficos:", error);
+                alert("Erro ao carregar dados. Os dados serão resetados.");
+                resetData();
+            }
         }
         
         function updateAchievements() {
@@ -1573,8 +1695,8 @@
             
             // SDR do Mês
             const sdrOfMonth = document.querySelector('.achievement:nth-child(3)');
-            sdrOfMonth.querySelector('p').textContent = topSdr.revenue > 0 ? topSdr.name : "-";
-            if (topSdr.revenue > 0) {
+            sdrOfMonth.querySelector('p').textContent = (topSdr.revenue || 0) > 0 ? topSdr.name : "-";
+            if ((topSdr.revenue || 0) > 0) {
                 sdrOfMonth.classList.add('unlocked');
             } else {
                 sdrOfMonth.classList.remove('unlocked');
@@ -1582,7 +1704,7 @@
             
             // Meta Batida SDR
             const sdrGoal = document.querySelector('.achievement:nth-child(1)');
-            if (topSdr.accounts >= 34) {
+            if ((topSdr.accounts || 0) >= 34) {
                 sdrGoal.classList.add('unlocked');
             } else {
                 sdrGoal.classList.remove('unlocked');
@@ -1590,7 +1712,7 @@
             
             // Super Meta SDR
             const sdrSuperGoal = document.querySelector('.achievement:nth-child(2)');
-            if (topSdr.accounts >= 44) {
+            if ((topSdr.accounts || 0) >= 44) {
                 sdrSuperGoal.classList.add('unlocked');
             } else {
                 sdrSuperGoal.classList.remove('unlocked');
@@ -1598,8 +1720,8 @@
             
             // Closer do Mês
             const closerOfMonth = document.querySelector('.achievement:nth-child(6)');
-            closerOfMonth.querySelector('p').textContent = topCloser.accounts > 0 ? topCloser.name : "-";
-            if (topCloser.accounts > 0) {
+            closerOfMonth.querySelector('p').textContent = (topCloser.accounts || 0) > 0 ? topCloser.name : "-";
+            if ((topCloser.accounts || 0) > 0) {
                 closerOfMonth.classList.add('unlocked');
             } else {
                 closerOfMonth.classList.remove('unlocked');
@@ -1607,7 +1729,7 @@
             
             // Meta Batida Closer
             const closerGoal = document.querySelector('.achievement:nth-child(4)');
-            if (topCloser.accounts >= 44) {
+            if ((topCloser.accounts || 0) >= 44) {
                 closerGoal.classList.add('unlocked');
             } else {
                 closerGoal.classList.remove('unlocked');
@@ -1615,7 +1737,7 @@
             
             // Super Meta Closer
             const closerSuperGoal = document.querySelector('.achievement:nth-child(5)');
-            if (topCloser.accounts >= 55) {
+            if ((topCloser.accounts || 0) >= 55) {
                 closerSuperGoal.classList.add('unlocked');
             } else {
                 closerSuperGoal.classList.remove('unlocked');
@@ -1623,8 +1745,8 @@
             
             // SDR Resgate do Mês
             const sdrResgateOfMonth = document.querySelector('.achievement:nth-child(8)');
-            sdrResgateOfMonth.querySelector('p').textContent = topSdrResgate.revenue > 0 ? topSdrResgate.name : "-";
-            if (topSdrResgate.revenue > 0) {
+            sdrResgateOfMonth.querySelector('p').textContent = (topSdrResgate.revenue || 0) > 0 ? topSdrResgate.name : "-";
+            if ((topSdrResgate.revenue || 0) > 0) {
                 sdrResgateOfMonth.classList.add('unlocked');
             } else {
                 sdrResgateOfMonth.classList.remove('unlocked');
@@ -1632,7 +1754,7 @@
             
             // Meta Batida SDR Resgate
             const sdrResgateGoal = document.querySelector('.achievement:nth-child(7)');
-            if (topSdrResgate.accounts >= 50) {
+            if ((topSdrResgate.accounts || 0) >= 50) {
                 sdrResgateGoal.classList.add('unlocked');
             } else {
                 sdrResgateGoal.classList.remove('unlocked');
@@ -1778,8 +1900,8 @@
             const sdr = document.getElementById('sdr').value;
             const sdrResgate = document.getElementById('sdr-resgate').value;
             const closer = document.getElementById('closer').value;
-            const accounts = parseInt(document.getElementById('accounts').value);
-            const value = parseFloat(document.getElementById('value').value);
+            const accounts = parseInt(document.getElementById('accounts').value) || 1;
+            const value = parseFloat(document.getElementById('value').value) || 0;
             
             // Validação: pelo menos um SDR ou SDR Resgate deve ser selecionado
             if (!userName || !closer || (!sdr && !sdrResgate)) {
@@ -1851,8 +1973,8 @@
             const userName = document.getElementById('direct-user-name-input').value;
             const seller = document.getElementById('direct-seller').value;
             const customSeller = document.getElementById('custom-seller').value;
-            const accounts = parseInt(document.getElementById('direct-accounts').value);
-            const value = parseFloat(document.getElementById('direct-value').value);
+            const accounts = parseInt(document.getElementById('direct-accounts').value) || 1;
+            const value = parseFloat(document.getElementById('direct-value').value) || 0;
             
             // Validação
             if (!userName || !seller) {
@@ -1944,16 +2066,25 @@
         database.ref('salesData').once('value').then((snapshot) => {
             const data = snapshot.val();
             if (data) {
-                sdrData = data.sdrData || sdrData;
-                sdrResgateData = data.sdrResgateData || sdrResgateData;
-                closerData = data.closerData || closerData;
-                directSalesData = data.directSalesData || directSalesData;
-                totalAccounts = data.totalAccounts || 0;
-                totalRevenue = data.totalRevenue || 0;
-                totalResgateAccounts = data.totalResgateAccounts || 0;
-                totalResgateRevenue = data.totalResgateRevenue || 0;
-                updateCharts();
+                try {
+                    const cleanedData = cleanCorruptedData(data);
+                    
+                    sdrData = cleanedData.sdrData || sdrData;
+                    sdrResgateData = cleanedData.sdrResgateData || sdrResgateData;
+                    closerData = cleanedData.closerData || closerData;
+                    directSalesData = cleanedData.directSalesData || directSalesData;
+                    totalAccounts = cleanedData.totalAccounts || 0;
+                    totalRevenue = cleanedData.totalRevenue || 0;
+                    totalResgateAccounts = cleanedData.totalResgateAccounts || 0;
+                    totalResgateRevenue = cleanedData.totalResgateRevenue || 0;
+                    updateCharts();
+                } catch (error) {
+                    console.error("Erro ao carregar dados iniciais:", error);
+                    resetData();
+                }
             }
+        }).catch((error) => {
+            console.error("Erro ao acessar Firebase:", error);
         });
     </script>
 </body>
