@@ -14,7 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <style>
-        /* Estilos anteriores mantidos */
+        /* Todos os estilos CSS anteriores mantidos */
         :root {
             --primary: #FF6B35;
             --primary-dark: #E55A2B;
@@ -31,6 +31,7 @@
             --text-secondary: #8C90B3;
             --gradient: linear-gradient(135deg, #FF6B35, #FFA726);
             --gradient-dark: linear-gradient(135deg, #E55A2B, #FF9800);
+            --resgate-gradient: linear-gradient(135deg, #2196F3, #21CBF3);
         }
         
         * {
@@ -164,6 +165,10 @@
             background: var(--gradient);
         }
         
+        .stat-card.resgate::before {
+            background: var(--resgate-gradient);
+        }
+        
         .stat-title {
             font-size: 1rem;
             color: var(--text-secondary);
@@ -178,6 +183,12 @@
             font-weight: 800;
             margin-bottom: 10px;
             background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-card.resgate .stat-value {
+            background: var(--resgate-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -203,6 +214,10 @@
             background: var(--gradient);
             border-radius: 3px;
             transition: width 0.5s ease;
+        }
+        
+        .stat-card.resgate .progress-fill {
+            background: var(--resgate-gradient);
         }
         
         .live-indicator {
@@ -279,6 +294,12 @@
             flex-direction: column;
             align-items: center;
             box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+            cursor: pointer;
+        }
+        
+        .chart-bar.resgate {
+            background: var(--resgate-gradient);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
         }
         
         .chart-bar-label {
@@ -298,6 +319,26 @@
             color: white;
             font-size: 1.1rem;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .chart-bar-accounts {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 5px;
+        }
+        
+        .chart-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            white-space: nowrap;
         }
         
         .add-sale-btn {
@@ -838,13 +879,24 @@
                 <div class="stat-value" id="top-closer">-</div>
                 <div class="stat-goal" id="top-closer-accounts">0 contas</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card resgate">
                 <div class="stat-title">
                     <i class="fas fa-user-plus"></i>
                     SDR Resgate do Mês
                 </div>
                 <div class="stat-value" id="top-sdr-resgate">-</div>
                 <div class="stat-goal" id="top-sdr-resgate-accounts">0 contas</div>
+            </div>
+            <div class="stat-card resgate">
+                <div class="stat-title">
+                    <i class="fas fa-chart-bar"></i>
+                    Total SDR Resgate
+                </div>
+                <div class="stat-value" id="total-sdr-resgate">R$ 0</div>
+                <div class="stat-goal">Meta: 50 contas</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="resgate-progress" style="width: 0%"></div>
+                </div>
             </div>
         </div>
         
@@ -855,7 +907,7 @@
                         <i class="fas fa-user-tie"></i>
                         Performance SDRs
                     </h2>
-                    <div style="color: var(--text-secondary); font-size: 0.9rem;">Contas Fechadas</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">Faturamento (R$)</div>
                 </div>
                 
                 <div class="chart-container" id="sdr-chart">
@@ -883,7 +935,7 @@
                         <i class="fas fa-user-plus"></i>
                         Performance SDR Resgate
                     </h2>
-                    <div style="color: var(--text-secondary); font-size: 0.9rem;">Contas Fechadas</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">Faturamento (R$)</div>
                 </div>
                 
                 <div class="chart-container" id="sdr-resgate-chart">
@@ -931,7 +983,7 @@
                 <div class="achievement">
                     <div class="achievement-icon">🎯</div>
                     <h3 class="achievement-title">Meta Batida SDR Resgate</h3>
-                    <p class="achievement-desc">34 contas fechadas</p>
+                    <p class="achievement-desc">50 contas fechadas</p>
                 </div>
                 <div class="achievement">
                     <div class="achievement-icon">🥇</div>
@@ -1100,7 +1152,6 @@
         // CONFIGURAÇÃO DO FIREBASE
         // ===============================
         
-        // Substitua estas configurações pelas suas do Firebase
         const firebaseConfig = {
           apiKey: "AIzaSyBP-N8gAsJGuBF4TU38UYws8doYJJhq2eA",
           authDomain: "salesboard-72715.firebaseapp.com",
@@ -1109,7 +1160,7 @@
           storageBucket: "salesboard-72715.firebasestorage.app",
           messagingSenderId: "800770788711",
           appId: "1:800770788711:web:0b770b7ff29946ae2c73c2",
-           measurementId: "G-VWFQ4FYBQT"
+          measurementId: "G-VWFQ4FYBQT"
         };
 
         // Inicializar Firebase
@@ -1121,31 +1172,33 @@
         // ===============================
         
         let sdrData = [
-            { name: "Alex Neder", accounts: 0 },
-            { name: "João Martins", accounts: 0 },
-            { name: "Gabriel Ferreira", accounts: 0 },
-            { name: "Charles Muller", accounts: 0 }
+            { name: "Alex Neder", accounts: 0, revenue: 0 },
+            { name: "João Martins", accounts: 0, revenue: 0 },
+            { name: "Gabriel Ferreira", accounts: 0, revenue: 0 },
+            { name: "Charles Muller", accounts: 0, revenue: 0 }
         ];
         
         let sdrResgateData = [
-            { name: "Davi", accounts: 0 },
-            { name: "João Henrique", accounts: 0 },
-            { name: "João Guilherme", accounts: 0 }
+            { name: "Davi", accounts: 0, revenue: 0 },
+            { name: "João Henrique", accounts: 0, revenue: 0 },
+            { name: "João Guilherme", accounts: 0, revenue: 0 }
         ];
         
         let closerData = [
-            { name: "Diego", accounts: 0 },
-            { name: "Josue", accounts: 0 },
-            { name: "Thiago Parreira", accounts: 0 }
+            { name: "Diego", accounts: 0, revenue: 0 },
+            { name: "Josue", accounts: 0, revenue: 0 },
+            { name: "Thiago Parreira", accounts: 0, revenue: 0 }
         ];
         
-        // Novo array para vendas diretas
         let directSalesData = [];
         
         let totalAccounts = 0;
         let totalRevenue = 0;
+        let totalResgateAccounts = 0;
+        let totalResgateRevenue = 0;
         const revenueGoal = 526680;
         const accountsGoal = 132;
+        const resgateGoal = 50;
 
         let currentUser = {
             name: "",
@@ -1165,6 +1218,8 @@
                 directSalesData: directSalesData,
                 totalAccounts: totalAccounts,
                 totalRevenue: totalRevenue,
+                totalResgateAccounts: totalResgateAccounts,
+                totalResgateRevenue: totalResgateRevenue,
                 lastUpdate: new Date().toISOString()
             };
             
@@ -1184,6 +1239,8 @@
                     directSalesData = data.directSalesData || directSalesData;
                     totalAccounts = data.totalAccounts || 0;
                     totalRevenue = data.totalRevenue || 0;
+                    totalResgateAccounts = data.totalResgateAccounts || 0;
+                    totalResgateRevenue = data.totalResgateRevenue || 0;
                     
                     updateCharts();
                     console.log("Dados atualizados do Firebase");
@@ -1222,6 +1279,7 @@
                             const sdrIndex = sdrData.findIndex(s => s.name === saleData.sdr);
                             if (sdrIndex !== -1) {
                                 sdrData[sdrIndex].accounts -= saleData.accounts;
+                                sdrData[sdrIndex].revenue -= saleData.value;
                             }
                         }
                         
@@ -1230,6 +1288,9 @@
                             const sdrResgateIndex = sdrResgateData.findIndex(s => s.name === saleData.sdrResgate);
                             if (sdrResgateIndex !== -1) {
                                 sdrResgateData[sdrResgateIndex].accounts -= saleData.accounts;
+                                sdrResgateData[sdrResgateIndex].revenue -= saleData.value;
+                                totalResgateAccounts -= saleData.accounts;
+                                totalResgateRevenue -= saleData.value;
                             }
                         }
                         
@@ -1238,6 +1299,7 @@
                             const closerIndex = closerData.findIndex(c => c.name === saleData.closer);
                             if (closerIndex !== -1) {
                                 closerData[closerIndex].accounts -= saleData.accounts;
+                                closerData[closerIndex].revenue -= saleData.value;
                             }
                         }
                         
@@ -1246,6 +1308,7 @@
                             const directIndex = directSalesData.findIndex(d => d.name === saleData.directSeller);
                             if (directIndex !== -1) {
                                 directSalesData[directIndex].accounts -= saleData.accounts;
+                                directSalesData[directIndex].revenue -= saleData.value;
                             }
                         }
                         
@@ -1264,13 +1327,20 @@
 
         // Carregar vendas recentes
         function loadRecentSales() {
-            database.ref('recentSales').limitToLast(10).on('value', (snapshot) => {
+            database.ref('recentSales').orderByChild('timestamp').limitToLast(10).on('value', (snapshot) => {
                 const sales = snapshot.val();
                 const salesList = document.getElementById('recent-sales');
                 salesList.innerHTML = '';
                 
                 if (sales) {
-                    const salesArray = Object.entries(sales).reverse();
+                    const salesArray = Object.entries(sales);
+                    // Ordenar por timestamp (mais recentes primeiro)
+                    salesArray.sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp));
+                    
+                    if (salesArray.length === 0) {
+                        salesList.innerHTML = '<div class="sale-item"><div class="sale-info">Nenhuma venda registrada ainda</div></div>';
+                        return;
+                    }
                     
                     salesArray.forEach(([saleId, sale]) => {
                         const saleItem = document.createElement('div');
@@ -1279,13 +1349,14 @@
                         let sellerInfo = '';
                         if (sale.directSeller) {
                             sellerInfo = `Venda Direta: ${sale.directSeller}`;
-                            saleItem.style.borderLeftColor = '#4CAF50'; // Verde para vendas diretas
+                            saleItem.style.borderLeftColor = '#4CAF50';
                         } else if (sale.sdr && sale.sdrResgate) {
                             sellerInfo = `${sale.sdr} + ${sale.sdrResgate}`;
                         } else if (sale.sdr) {
                             sellerInfo = sale.sdr;
                         } else if (sale.sdrResgate) {
                             sellerInfo = sale.sdrResgate;
+                            saleItem.style.borderLeftColor = '#2196F3';
                         }
                         
                         const closerInfo = sale.closer ? ` → ${sale.closer}` : '';
@@ -1296,7 +1367,7 @@
                                 <div>
                                     ${sale.accounts} conta(s) - R$ ${sale.value.toLocaleString('pt-BR')} 
                                     <small style="color: var(--text-secondary); font-size: 0.8rem;">
-                                        ${new Date(sale.timestamp).toLocaleTimeString()}
+                                        ${new Date(sale.timestamp).toLocaleString('pt-BR')}
                                     </small>
                                 </div>
                             </div>
@@ -1319,11 +1390,11 @@
         // ===============================
 
         function updateCharts() {
-            // Ordenar SDRs por número de contas
-            sdrData.sort((a, b) => b.accounts - a.accounts);
+            // Ordenar SDRs por faturamento
+            sdrData.sort((a, b) => b.revenue - a.revenue);
             
-            // Ordenar SDRs Resgate por número de contas
-            sdrResgateData.sort((a, b) => b.accounts - a.accounts);
+            // Ordenar SDRs Resgate por faturamento
+            sdrResgateData.sort((a, b) => b.revenue - a.revenue);
             
             // Ordenar Closers por número de contas
             closerData.sort((a, b) => b.accounts - a.accounts);
@@ -1335,18 +1406,42 @@
             const sdrChart = document.getElementById('sdr-chart');
             sdrChart.innerHTML = '';
             
-            const maxSdrAccounts = Math.max(...sdrData.map(sdr => sdr.accounts), 1);
+            const maxSdrRevenue = Math.max(...sdrData.map(sdr => sdr.revenue), 1);
             
             sdrData.forEach((sdr) => {
-                const barHeight = (sdr.accounts / maxSdrAccounts) * 80;
+                const barHeight = (sdr.revenue / maxSdrRevenue) * 80;
                 
                 const bar = document.createElement('div');
                 bar.className = 'chart-bar';
                 bar.style.height = `${barHeight}%`;
                 bar.innerHTML = `
-                    <div class="chart-bar-value">${sdr.accounts}</div>
+                    <div class="chart-bar-value">R$ ${Math.round(sdr.revenue).toLocaleString('pt-BR')}</div>
+                    <div class="chart-bar-accounts">${sdr.accounts} contas</div>
                     <div class="chart-bar-label">${sdr.name}</div>
                 `;
+                
+                // Adicionar tooltip
+                const tooltip = document.createElement('div');
+                tooltip.className = 'chart-tooltip';
+                tooltip.textContent = `Faturamento: R$ ${sdr.revenue.toLocaleString('pt-BR')} | Contas: ${sdr.accounts}`;
+                bar.appendChild(tooltip);
+                
+                // Eventos para tooltip
+                bar.addEventListener('mouseenter', function(e) {
+                    tooltip.style.opacity = '1';
+                    tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
+                    tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
+                });
+                
+                bar.addEventListener('mousemove', function(e) {
+                    tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
+                    tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
+                });
+                
+                bar.addEventListener('mouseleave', function() {
+                    tooltip.style.opacity = '0';
+                });
+                
                 sdrChart.appendChild(bar);
             });
             
@@ -1366,6 +1461,29 @@
                     <div class="chart-bar-value">${closer.accounts}</div>
                     <div class="chart-bar-label">${closer.name}</div>
                 `;
+                
+                // Adicionar tooltip
+                const tooltip = document.createElement('div');
+                tooltip.className = 'chart-tooltip';
+                tooltip.textContent = `Contas: ${closer.accounts} | Faturamento: R$ ${closer.revenue.toLocaleString('pt-BR')}`;
+                bar.appendChild(tooltip);
+                
+                // Eventos para tooltip
+                bar.addEventListener('mouseenter', function(e) {
+                    tooltip.style.opacity = '1';
+                    tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
+                    tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
+                });
+                
+                bar.addEventListener('mousemove', function(e) {
+                    tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
+                    tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
+                });
+                
+                bar.addEventListener('mouseleave', function() {
+                    tooltip.style.opacity = '0';
+                });
+                
                 closerChart.appendChild(bar);
             });
             
@@ -1373,24 +1491,51 @@
             const sdrResgateChart = document.getElementById('sdr-resgate-chart');
             sdrResgateChart.innerHTML = '';
             
-            const maxSdrResgateAccounts = Math.max(...sdrResgateData.map(sdr => sdr.accounts), 1);
+            const maxSdrResgateRevenue = Math.max(...sdrResgateData.map(sdr => sdr.revenue), 1);
             
             sdrResgateData.forEach((sdr) => {
-                const barHeight = (sdr.accounts / maxSdrResgateAccounts) * 80;
+                const barHeight = (sdr.revenue / maxSdrResgateRevenue) * 80;
                 
                 const bar = document.createElement('div');
-                bar.className = 'chart-bar';
+                bar.className = 'chart-bar resgate';
                 bar.style.height = `${barHeight}%`;
                 bar.innerHTML = `
-                    <div class="chart-bar-value">${sdr.accounts}</div>
+                    <div class="chart-bar-value">R$ ${Math.round(sdr.revenue).toLocaleString('pt-BR')}</div>
+                    <div class="chart-bar-accounts">${sdr.accounts} contas</div>
                     <div class="chart-bar-label">${sdr.name}</div>
                 `;
+                
+                // Adicionar tooltip
+                const tooltip = document.createElement('div');
+                tooltip.className = 'chart-tooltip';
+                tooltip.textContent = `Faturamento: R$ ${sdr.revenue.toLocaleString('pt-BR')} | Contas: ${sdr.accounts}`;
+                bar.appendChild(tooltip);
+                
+                // Eventos para tooltip
+                bar.addEventListener('mouseenter', function(e) {
+                    tooltip.style.opacity = '1';
+                    tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
+                    tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
+                });
+                
+                bar.addEventListener('mousemove', function(e) {
+                    tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
+                    tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
+                });
+                
+                bar.addEventListener('mouseleave', function() {
+                    tooltip.style.opacity = '0';
+                });
+                
                 sdrResgateChart.appendChild(bar);
             });
             
             // Atualizar estatísticas gerais
             document.getElementById('total-accounts').textContent = totalAccounts;
             document.getElementById('total-revenue').textContent = `R$ ${totalRevenue.toLocaleString('pt-BR')}`;
+            
+            // Atualizar contadores de SDR Resgate
+            document.getElementById('total-sdr-resgate').textContent = `R$ ${totalResgateRevenue.toLocaleString('pt-BR')}`;
             
             // Atualizar barras de progresso
             const accountsProgress = (totalAccounts / accountsGoal) * 100;
@@ -1399,9 +1544,12 @@
             const revenueProgress = (totalRevenue / revenueGoal) * 100;
             document.getElementById('revenue-progress').style.width = `${Math.min(revenueProgress, 100)}%`;
             
+            const resgateProgress = (totalResgateAccounts / resgateGoal) * 100;
+            document.getElementById('resgate-progress').style.width = `${Math.min(resgateProgress, 100)}%`;
+            
             // Atualizar SDR do mês
             const topSdr = sdrData[0];
-            document.getElementById('top-sdr').textContent = topSdr.accounts > 0 ? topSdr.name : "-";
+            document.getElementById('top-sdr').textContent = topSdr.revenue > 0 ? topSdr.name : "-";
             document.getElementById('top-sdr-accounts').textContent = `${topSdr.accounts} contas`;
             
             // Atualizar Closer do mês
@@ -1411,7 +1559,7 @@
             
             // Atualizar SDR Resgate do mês
             const topSdrResgate = sdrResgateData[0];
-            document.getElementById('top-sdr-resgate').textContent = topSdrResgate.accounts > 0 ? topSdrResgate.name : "-";
+            document.getElementById('top-sdr-resgate').textContent = topSdrResgate.revenue > 0 ? topSdrResgate.name : "-";
             document.getElementById('top-sdr-resgate-accounts').textContent = `${topSdrResgate.accounts} contas`;
             
             // Atualizar conquistas
@@ -1425,8 +1573,8 @@
             
             // SDR do Mês
             const sdrOfMonth = document.querySelector('.achievement:nth-child(3)');
-            sdrOfMonth.querySelector('p').textContent = topSdr.accounts > 0 ? topSdr.name : "-";
-            if (topSdr.accounts > 0) {
+            sdrOfMonth.querySelector('p').textContent = topSdr.revenue > 0 ? topSdr.name : "-";
+            if (topSdr.revenue > 0) {
                 sdrOfMonth.classList.add('unlocked');
             } else {
                 sdrOfMonth.classList.remove('unlocked');
@@ -1475,8 +1623,8 @@
             
             // SDR Resgate do Mês
             const sdrResgateOfMonth = document.querySelector('.achievement:nth-child(8)');
-            sdrResgateOfMonth.querySelector('p').textContent = topSdrResgate.accounts > 0 ? topSdrResgate.name : "-";
-            if (topSdrResgate.accounts > 0) {
+            sdrResgateOfMonth.querySelector('p').textContent = topSdrResgate.revenue > 0 ? topSdrResgate.name : "-";
+            if (topSdrResgate.revenue > 0) {
                 sdrResgateOfMonth.classList.add('unlocked');
             } else {
                 sdrResgateOfMonth.classList.remove('unlocked');
@@ -1484,7 +1632,7 @@
             
             // Meta Batida SDR Resgate
             const sdrResgateGoal = document.querySelector('.achievement:nth-child(7)');
-            if (topSdrResgate.accounts >= 34) {
+            if (topSdrResgate.accounts >= 50) {
                 sdrResgateGoal.classList.add('unlocked');
             } else {
                 sdrResgateGoal.classList.remove('unlocked');
@@ -1652,6 +1800,7 @@
                 const sdrIndex = sdrData.findIndex(s => s.name === sdr);
                 if (sdrIndex !== -1) {
                     sdrData[sdrIndex].accounts += accounts;
+                    sdrData[sdrIndex].revenue += value;
                 }
             }
             
@@ -1660,6 +1809,9 @@
                 const sdrResgateIndex = sdrResgateData.findIndex(s => s.name === sdrResgate);
                 if (sdrResgateIndex !== -1) {
                     sdrResgateData[sdrResgateIndex].accounts += accounts;
+                    sdrResgateData[sdrResgateIndex].revenue += value;
+                    totalResgateAccounts += accounts;
+                    totalResgateRevenue += value;
                 }
             }
             
@@ -1667,6 +1819,7 @@
             const closerIndex = closerData.findIndex(c => c.name === closer);
             if (closerIndex !== -1) {
                 closerData[closerIndex].accounts += accounts;
+                closerData[closerIndex].revenue += value;
             }
             
             // Atualizar totais
@@ -1727,26 +1880,32 @@
             let sellerIndex = directSalesData.findIndex(d => d.name === finalSeller);
             if (sellerIndex === -1) {
                 // Adicionar novo vendedor
-                directSalesData.push({ name: finalSeller, accounts: accounts });
+                directSalesData.push({ name: finalSeller, accounts: accounts, revenue: value });
             } else {
                 // Atualizar vendedor existente
                 directSalesData[sellerIndex].accounts += accounts;
+                directSalesData[sellerIndex].revenue += value;
             }
             
             // Atualizar também nos arrays de SDR, SDR Resgate ou Closer se o vendedor existir neles
             const sdrIndex = sdrData.findIndex(s => s.name === finalSeller);
             if (sdrIndex !== -1) {
                 sdrData[sdrIndex].accounts += accounts;
+                sdrData[sdrIndex].revenue += value;
             }
             
             const sdrResgateIndex = sdrResgateData.findIndex(s => s.name === finalSeller);
             if (sdrResgateIndex !== -1) {
                 sdrResgateData[sdrResgateIndex].accounts += accounts;
+                sdrResgateData[sdrResgateIndex].revenue += value;
+                totalResgateAccounts += accounts;
+                totalResgateRevenue += value;
             }
             
             const closerIndex = closerData.findIndex(c => c.name === finalSeller);
             if (closerIndex !== -1) {
                 closerData[closerIndex].accounts += accounts;
+                closerData[closerIndex].revenue += value;
             }
             
             // Atualizar totais
@@ -1791,6 +1950,8 @@
                 directSalesData = data.directSalesData || directSalesData;
                 totalAccounts = data.totalAccounts || 0;
                 totalRevenue = data.totalRevenue || 0;
+                totalResgateAccounts = data.totalResgateAccounts || 0;
+                totalResgateRevenue = data.totalResgateRevenue || 0;
                 updateCharts();
             }
         });
