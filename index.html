@@ -14,19 +14,18 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <style>
-        /* Todos os estilos CSS anteriores mantidos */
         :root {
             --primary: #FF6B35;
             --primary-dark: #E55A2B;
             --secondary: #FFA726;
             --accent: #FF4081;
-            --dark: #1A1D2E;
-            --darker: #121625;
+            --dark: #0F1419;
+            --darker: #0A0F14;
             --light: #F5F7FA;
-            --success: #4CAF50;
+            --success: #00C853;
             --warning: #FFB547;
             --danger: #FF5252;
-            --card-bg: #252A41;
+            --card-bg: #1E2328;
             --text: #E4E6F0;
             --text-secondary: #8C90B3;
             --gradient: linear-gradient(135deg, #FF6B35, #FFA726);
@@ -42,7 +41,7 @@
         }
         
         body {
-            background: linear-gradient(135deg, var(--darker), var(--dark));
+            background: var(--darker);
             color: var(--text);
             min-height: 100vh;
             padding: 20px;
@@ -61,9 +60,9 @@
             margin-bottom: 30px;
             padding: 20px 30px;
             background: var(--card-bg);
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 107, 53, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
         
         .logo {
@@ -73,19 +72,18 @@
         }
         
         .logo-icon {
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 45px;
             border-radius: 12px;
             background: var(--gradient);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+            font-size: 1.3rem;
         }
         
         .logo h1 {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 800;
             background: var(--gradient);
             -webkit-background-clip: text;
@@ -141,9 +139,9 @@
         
         .stat-card {
             background: var(--card-bg);
-            border-radius: 20px;
+            border-radius: 16px;
             padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
             transition: transform 0.3s, box-shadow 0.3s;
             position: relative;
             overflow: hidden;
@@ -152,7 +150,7 @@
         
         .stat-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
         }
         
         .stat-card::before {
@@ -161,7 +159,7 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 4px;
+            height: 3px;
             background: var(--gradient);
         }
         
@@ -170,7 +168,7 @@
         }
         
         .stat-title {
-            font-size: 1rem;
+            font-size: 0.9rem;
             color: var(--text-secondary);
             margin-bottom: 15px;
             display: flex;
@@ -179,7 +177,7 @@
         }
         
         .stat-value {
-            font-size: 2.2rem;
+            font-size: 2rem;
             font-weight: 800;
             margin-bottom: 10px;
             background: var(--gradient);
@@ -194,17 +192,14 @@
         }
         
         .stat-goal {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
         
         .progress-bar {
-            height: 6px;
+            height: 4px;
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
+            border-radius: 2px;
             margin-top: 10px;
             overflow: hidden;
         }
@@ -212,7 +207,7 @@
         .progress-fill {
             height: 100%;
             background: var(--gradient);
-            border-radius: 3px;
+            border-radius: 2px;
             transition: width 0.5s ease;
         }
         
@@ -245,9 +240,9 @@
         
         .ranking-card {
             background: var(--card-bg);
-            border-radius: 20px;
+            border-radius: 16px;
             padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
         
@@ -259,7 +254,7 @@
         }
         
         .ranking-title {
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             font-weight: 700;
             display: flex;
             align-items: center;
@@ -270,101 +265,187 @@
             color: var(--primary);
         }
         
+        /* FILTROS SIMPLES - NOVO */
+        .chart-filters {
+            display: flex;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px;
+            border-radius: 12px;
+        }
+        
+        .filter-btn {
+            padding: 6px 16px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .filter-btn.active {
+            background: var(--gradient);
+            color: white;
+        }
+        
+        /* GRÁFICOS FINETECH - NOVO */
         .chart-container {
             position: relative;
             height: 280px;
-            margin-top: 20px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 16px;
+            margin-top: 10px;
+            background: transparent;
+            border-radius: 12px;
             overflow: hidden;
-            padding: 20px;
+            padding: 0 10px;
+        }
+        
+        .chart-bars {
             display: flex;
             align-items: flex-end;
             justify-content: space-around;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            height: 100%;
+            gap: 15px;
         }
         
-        .chart-bar {
-            width: 70px;
-            background: var(--gradient);
-            border-radius: 8px 8px 0 0;
-            position: relative;
-            transition: height 1s ease-in-out;
+        .chart-bar-wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+            flex: 1;
+            max-width: 80px;
+        }
+        
+        .chart-bar {
+            width: 100%;
+            min-width: 50px;
+            background: var(--gradient);
+            border-radius: 8px 8px 0 0;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
             cursor: pointer;
+            min-height: 40px;
+            transform: scaleY(0);
+            transform-origin: bottom;
         }
         
         .chart-bar.resgate {
             background: var(--resgate-gradient);
-            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
         }
         
-        .chart-bar-label {
-            margin-top: 10px;
-            text-align: center;
-            font-size: 0.85rem;
-            color: var(--text);
-            font-weight: 600;
-            width: 100%;
-            word-break: break-word;
+        .chart-bar:hover {
+            transform: scaleY(1) translateY(-2px);
+            filter: brightness(1.1);
         }
         
         .chart-bar-value {
-            margin-bottom: 5px;
-            text-align: center;
-            font-weight: bold;
-            color: white;
-            font-size: 1.1rem;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-        }
-        
-        .chart-bar-accounts {
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.8);
-            margin-top: 5px;
-        }
-        
-        .chart-tooltip {
             position: absolute;
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            padding: 12px 16px;
-            border-radius: 8px;
+            top: -25px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-weight: 700;
             font-size: 0.9rem;
-            z-index: 100;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s;
-            white-space: nowrap;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            color: var(--text);
+        }
+        
+        .chart-bar-label {
+            margin-top: 8px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            line-height: 1.2;
+        }
+        
+        /* GRÁFICO VAZIO */
+        .chart-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+        
+        .chart-empty i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        .chart-empty p {
+            font-size: 0.9rem;
         }
         
         .add-sale-btn {
             position: fixed;
             bottom: 30px;
             right: 30px;
-            width: 70px;
-            height: 70px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             background: var(--gradient);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             box-shadow: 0 6px 20px rgba(255, 107, 53, 0.5);
             cursor: pointer;
             transition: transform 0.3s, box-shadow 0.3s;
             z-index: 100;
+            border: none;
         }
         
         .add-sale-btn:hover {
             transform: scale(1.1);
             box-shadow: 0 8px 25px rgba(255, 107, 53, 0.7);
+        }
+        
+        .direct-sale-btn {
+            position: fixed;
+            bottom: 110px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.3rem;
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            z-index: 100;
+            border: none;
+        }
+        
+        .direct-sale-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.7);
+        }
+        
+        .direct-sale-indicator {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--accent);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
         }
         
         .modal {
@@ -383,7 +464,7 @@
         
         .modal-content {
             background: var(--card-bg);
-            border-radius: 24px;
+            border-radius: 20px;
             width: 90%;
             max-width: 500px;
             padding: 30px;
@@ -407,7 +488,7 @@
         }
         
         .modal-title {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 700;
             background: var(--gradient);
             -webkit-background-clip: text;
@@ -459,12 +540,12 @@
         
         select, input {
             width: 100%;
-            padding: 16px;
+            padding: 14px;
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 12px;
+            border-radius: 10px;
             color: var(--text);
-            font-size: 1rem;
+            font-size: 0.9rem;
             transition: all 0.3s;
             appearance: none;
         }
@@ -472,9 +553,9 @@
         select {
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238C90B3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 16px center;
-            background-size: 16px;
-            padding-right: 45px;
+            background-position: right 14px center;
+            background-size: 14px;
+            padding-right: 40px;
             cursor: pointer;
         }
         
@@ -495,10 +576,10 @@
             content: '';
             position: absolute;
             top: 50%;
-            right: 16px;
+            right: 14px;
             transform: translateY(-50%);
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238C90B3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: center;
@@ -507,12 +588,12 @@
         
         .submit-btn {
             width: 100%;
-            padding: 18px;
+            padding: 16px;
             background: var(--gradient);
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             color: white;
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: 700;
             cursor: pointer;
             transition: transform 0.3s, box-shadow 0.3s;
@@ -526,9 +607,9 @@
         
         .achievements {
             background: var(--card-bg);
-            border-radius: 20px;
+            border-radius: 16px;
             padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
         
@@ -541,8 +622,8 @@
         
         .achievement {
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 25px;
+            border-radius: 12px;
+            padding: 20px;
             text-align: center;
             transition: transform 0.3s, background 0.3s;
             border: 1px solid rgba(255, 255, 255, 0.05);
@@ -560,19 +641,19 @@
         }
         
         .achievement-icon {
-            font-size: 2.8rem;
-            margin-bottom: 15px;
+            font-size: 2.2rem;
+            margin-bottom: 12px;
             filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
         }
         
         .achievement-title {
             font-weight: 700;
-            margin-bottom: 8px;
-            font-size: 1.1rem;
+            margin-bottom: 6px;
+            font-size: 1rem;
         }
         
         .achievement-desc {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             color: var(--text-secondary);
         }
         
@@ -582,8 +663,8 @@
             right: 30px;
             background: var(--success);
             color: white;
-            padding: 16px 24px;
-            border-radius: 12px;
+            padding: 14px 20px;
+            border-radius: 10px;
             box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
             display: flex;
             align-items: center;
@@ -598,14 +679,14 @@
         }
         
         .toast-icon {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
         }
         
         .recent-sales {
             background: var(--card-bg);
-            border-radius: 20px;
+            border-radius: 16px;
             padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
             margin-top: 30px;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
@@ -622,7 +703,7 @@
             align-items: center;
             padding: 12px 15px;
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
+            border-radius: 8px;
             margin-bottom: 8px;
             border-left: 4px solid var(--primary);
             transition: background-color 0.3s;
@@ -685,7 +766,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) scale(0);
-            font-size: 4rem;
+            font-size: 3rem;
             font-weight: 900;
             background: var(--gradient);
             -webkit-background-clip: text;
@@ -704,53 +785,11 @@
 
         .particle {
             position: fixed;
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             pointer-events: none;
             z-index: 9999;
-        }
-        
-        /* Estilos para o botão de venda direta */
-        .direct-sale-btn {
-            position: fixed;
-            bottom: 120px;
-            right: 30px;
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.5rem;
-            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
-            cursor: pointer;
-            transition: transform 0.3s, box-shadow 0.3s;
-            z-index: 100;
-        }
-        
-        .direct-sale-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.7);
-        }
-        
-        .direct-sale-indicator {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: var(--accent);
-            color: white;
-            border-radius: 50%;
-            width: 25px;
-            height: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
         }
         
         @media (max-width: 1400px) {
@@ -787,12 +826,11 @@
             }
             
             .chart-container {
-                height: 250px;
-                padding: 15px;
+                height: 240px;
             }
             
             .chart-bar {
-                width: 60px;
+                min-width: 40px;
             }
             
             header {
@@ -814,8 +852,13 @@
             }
             
             .direct-sale-btn {
-                bottom: 110px;
+                bottom: 100px;
                 right: 25px;
+            }
+            
+            .chart-filters {
+                flex-wrap: wrap;
+                justify-content: center;
             }
         }
     </style>
@@ -905,45 +948,63 @@
         </div>
         
         <div class="rankings-section">
+            <!-- Performance SDRs -->
             <div class="ranking-card">
                 <div class="ranking-header">
                     <h2 class="ranking-title">
                         <i class="fas fa-user-tie"></i>
                         Performance SDRs
                     </h2>
-                    <div style="color: var(--text-secondary); font-size: 0.9rem;">Faturamento (R$)</div>
+                    <div class="chart-filters">
+                        <button class="filter-btn active" data-chart="sdr" data-type="revenue">Faturamento</button>
+                        <button class="filter-btn" data-chart="sdr" data-type="accounts">Contas</button>
+                    </div>
                 </div>
-                
                 <div class="chart-container" id="sdr-chart">
-                    <!-- Gráfico será preenchido via JavaScript -->
+                    <div class="chart-empty">
+                        <i class="fas fa-chart-bar"></i>
+                        <p>Nenhum dado disponível</p>
+                    </div>
                 </div>
             </div>
             
+            <!-- Performance Closers -->
             <div class="ranking-card">
                 <div class="ranking-header">
                     <h2 class="ranking-title">
                         <i class="fas fa-handshake"></i>
                         Performance Closers
                     </h2>
-                    <div style="color: var(--text-secondary); font-size: 0.9rem;">Contas Fechadas</div>
+                    <div class="chart-filters">
+                        <button class="filter-btn active" data-chart="closer" data-type="accounts">Contas</button>
+                        <button class="filter-btn" data-chart="closer" data-type="revenue">Faturamento</button>
+                    </div>
                 </div>
-                
                 <div class="chart-container" id="closer-chart">
-                    <!-- Gráfico será preenchido via JavaScript -->
+                    <div class="chart-empty">
+                        <i class="fas fa-chart-bar"></i>
+                        <p>Nenhum dado disponível</p>
+                    </div>
                 </div>
             </div>
 
+            <!-- Performance SDR Resgate -->
             <div class="ranking-card">
                 <div class="ranking-header">
                     <h2 class="ranking-title">
                         <i class="fas fa-user-plus"></i>
                         Performance SDR Resgate
                     </h2>
-                    <div style="color: var(--text-secondary); font-size: 0.9rem;">Faturamento (R$)</div>
+                    <div class="chart-filters">
+                        <button class="filter-btn active" data-chart="sdr-resgate" data-type="revenue">Faturamento</button>
+                        <button class="filter-btn" data-chart="sdr-resgate" data-type="accounts">Contas</button>
+                    </div>
                 </div>
-                
                 <div class="chart-container" id="sdr-resgate-chart">
-                    <!-- Gráfico será preenchido via JavaScript -->
+                    <div class="chart-empty">
+                        <i class="fas fa-chart-bar"></i>
+                        <p>Nenhum dado disponível</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1207,6 +1268,13 @@
         let currentUser = {
             name: "",
             role: ""
+        };
+
+        // Configurações dos gráficos
+        const chartConfigs = {
+            'sdr': { type: 'revenue', data: [] },
+            'closer': { type: 'accounts', data: [] },
+            'sdr-resgate': { type: 'revenue', data: [] }
         };
 
         // ===============================
@@ -1505,359 +1573,147 @@
         }
 
         // ===============================
-        // FUNÇÕES DA APLICAÇÃO
+        // FUNÇÕES DOS GRÁFICOS - NOVO ESTILO
         // ===============================
 
+        // Função para criar gráfico clean
+        function updateSingleChart(chartId) {
+            const chartElement = document.getElementById(`${chartId}-chart`);
+            const config = chartConfigs[chartId];
+            
+            if (!chartElement) return;
+            
+            // Limpar gráfico
+            chartElement.innerHTML = '';
+            
+            let data = [];
+            let maxValue = 1;
+            
+            // Selecionar dados
+            switch(chartId) {
+                case 'sdr':
+                    data = [...sdrData];
+                    break;
+                case 'closer':
+                    data = [...closerData];
+                    break;
+                case 'sdr-resgate':
+                    data = [...sdrResgateData];
+                    break;
+            }
+            
+            // Calcular valor máximo baseado no tipo selecionado
+            maxValue = Math.max(...data.map(item => config.type === 'revenue' ? item.revenue : item.accounts), 1);
+            
+            // Ordenar dados
+            data.sort((a, b) => {
+                const aValue = config.type === 'revenue' ? a.revenue : a.accounts;
+                const bValue = config.type === 'revenue' ? b.revenue : b.accounts;
+                return bValue - aValue;
+            });
+            
+            // Verificar se há dados
+            const hasData = data.some(item => (config.type === 'revenue' ? item.revenue : item.accounts) > 0);
+            
+            if (!hasData) {
+                chartElement.innerHTML = `
+                    <div class="chart-empty">
+                        <i class="fas fa-chart-bar"></i>
+                        <p>Nenhum dado disponível</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Criar container das barras
+            const barsContainer = document.createElement('div');
+            barsContainer.className = 'chart-bars';
+            
+            // Criar barras
+            data.forEach((item, index) => {
+                const value = config.type === 'revenue' ? item.revenue : item.accounts;
+                const barHeight = Math.max((value / maxValue) * 80, 10); // Mínimo 10% de altura
+                
+                const barWrapper = document.createElement('div');
+                barWrapper.className = 'chart-bar-wrapper';
+                
+                const displayValue = config.type === 'revenue' 
+                    ? `R$ ${Math.round(value).toLocaleString('pt-BR')}` 
+                    : `${value}`;
+                
+                barWrapper.innerHTML = `
+                    <div class="chart-bar ${chartId === 'sdr-resgate' ? 'resgate' : ''}" 
+                         style="height: ${barHeight}%">
+                        <div class="chart-bar-value">${displayValue}</div>
+                    </div>
+                    <div class="chart-bar-label">${item.name.split(' ')[0]}</div>
+                `;
+                
+                barsContainer.appendChild(barWrapper);
+                
+                // Animação de entrada
+                setTimeout(() => {
+                    const bar = barWrapper.querySelector('.chart-bar');
+                    bar.style.transform = 'scaleY(1)';
+                }, index * 100);
+            });
+            
+            chartElement.appendChild(barsContainer);
+        }
+
+        // Função principal para atualizar todos os gráficos
         function updateCharts() {
             try {
-                // Ordenar SDRs por faturamento
-                sdrData.sort((a, b) => (b.revenue || 0) - (a.revenue || 0));
-                
-                // Ordenar SDRs Resgate por faturamento
-                sdrResgateData.sort((a, b) => (b.revenue || 0) - (a.revenue || 0));
-                
-                // Ordenar Closers por número de contas
-                closerData.sort((a, b) => (b.accounts || 0) - (a.accounts || 0));
-                
-                // Ordenar Vendas Diretas por número de contas
-                directSalesData.sort((a, b) => (b.accounts || 0) - (a.accounts || 0));
-                
-                // Atualizar gráfico de SDRs
-                const sdrChart = document.getElementById('sdr-chart');
-                sdrChart.innerHTML = '';
-                
-                const maxSdrRevenue = Math.max(...sdrData.map(sdr => sdr.revenue || 0), 1);
-                
-                sdrData.forEach((sdr) => {
-                    const revenue = sdr.revenue || 0;
-                    const accounts = sdr.accounts || 0;
-                    const barHeight = (revenue / maxSdrRevenue) * 80;
-                    
-                    const bar = document.createElement('div');
-                    bar.className = 'chart-bar';
-                    bar.style.height = `${barHeight}%`;
-                    bar.innerHTML = `
-                        <div class="chart-bar-accounts">${accounts} contas</div>
-                        <div class="chart-bar-label">${sdr.name}</div>
-                    `;
-                    
-                    // Adicionar tooltip
-                    const tooltip = document.createElement('div');
-                    tooltip.className = 'chart-tooltip';
-                    tooltip.innerHTML = `
-                        <div><strong>${sdr.name}</strong></div>
-                        <div>Contas: ${accounts}</div>
-                        <div>Faturamento: R$ ${revenue.toLocaleString('pt-BR')}</div>
-                    `;
-                    bar.appendChild(tooltip);
-                    
-                    // Eventos para tooltip
-                    bar.addEventListener('mouseenter', function(e) {
-                        tooltip.style.opacity = '1';
-                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 80}px`;
-                        tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
-                    });
-                    
-                    bar.addEventListener('mousemove', function(e) {
-                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 80}px`;
-                        tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
-                    });
-                    
-                    bar.addEventListener('mouseleave', function() {
-                        tooltip.style.opacity = '0';
-                    });
-                    
-                    sdrChart.appendChild(bar);
-                });
-                
-                // Atualizar gráfico de Closers
-                const closerChart = document.getElementById('closer-chart');
-                closerChart.innerHTML = '';
-                
-                const maxCloserAccounts = Math.max(...closerData.map(closer => closer.accounts || 0), 1);
-                
-                closerData.forEach((closer) => {
-                    const accounts = closer.accounts || 0;
-                    const revenue = closer.revenue || 0;
-                    const barHeight = (accounts / maxCloserAccounts) * 80;
-                    
-                    const bar = document.createElement('div');
-                    bar.className = 'chart-bar';
-                    bar.style.height = `${barHeight}%`;
-                    bar.innerHTML = `
-                        <div class="chart-bar-accounts">${accounts} contas</div>
-                        <div class="chart-bar-label">${closer.name}</div>
-                    `;
-                    
-                    // Adicionar tooltip
-                    const tooltip = document.createElement('div');
-                    tooltip.className = 'chart-tooltip';
-                    tooltip.innerHTML = `
-                        <div><strong>${closer.name}</strong></div>
-                        <div>Contas: ${accounts}</div>
-                        <div>Faturamento: R$ ${revenue.toLocaleString('pt-BR')}</div>
-                    `;
-                    bar.appendChild(tooltip);
-                    
-                    // Eventos para tooltip
-                    bar.addEventListener('mouseenter', function(e) {
-                        tooltip.style.opacity = '1';
-                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 80}px`;
-                        tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
-                    });
-                    
-                    bar.addEventListener('mousemove', function(e) {
-                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 80}px`;
-                        tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
-                    });
-                    
-                    bar.addEventListener('mouseleave', function() {
-                        tooltip.style.opacity = '0';
-                    });
-                    
-                    closerChart.appendChild(bar);
-                });
-                
-                // Atualizar gráfico de SDR Resgate
-                const sdrResgateChart = document.getElementById('sdr-resgate-chart');
-                sdrResgateChart.innerHTML = '';
-                
-                const maxSdrResgateRevenue = Math.max(...sdrResgateData.map(sdr => sdr.revenue || 0), 1);
-                
-                sdrResgateData.forEach((sdr) => {
-                    const revenue = sdr.revenue || 0;
-                    const accounts = sdr.accounts || 0;
-                    const barHeight = (revenue / maxSdrResgateRevenue) * 80;
-                    
-                    const bar = document.createElement('div');
-                    bar.className = 'chart-bar resgate';
-                    bar.style.height = `${barHeight}%`;
-                    bar.innerHTML = `
-                        <div class="chart-bar-accounts">${accounts} contas</div>
-                        <div class="chart-bar-label">${sdr.name}</div>
-                    `;
-                    
-                    // Adicionar tooltip
-                    const tooltip = document.createElement('div');
-                    tooltip.className = 'chart-tooltip';
-                    tooltip.innerHTML = `
-                        <div><strong>${sdr.name}</strong></div>
-                        <div>Contas: ${accounts}</div>
-                        <div>Faturamento: R$ ${revenue.toLocaleString('pt-BR')}</div>
-                    `;
-                    bar.appendChild(tooltip);
-                    
-                    // Eventos para tooltip
-                    bar.addEventListener('mouseenter', function(e) {
-                        tooltip.style.opacity = '1';
-                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 80}px`;
-                        tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
-                    });
-                    
-                    bar.addEventListener('mousemove', function(e) {
-                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 80}px`;
-                        tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
-                    });
-                    
-                    bar.addEventListener('mouseleave', function() {
-                        tooltip.style.opacity = '0';
-                    });
-                    
-                    sdrResgateChart.appendChild(bar);
-                });
-                
-                // Atualizar estatísticas gerais
+                // Atualizar estatísticas
                 document.getElementById('total-accounts').textContent = totalAccounts;
                 document.getElementById('total-revenue').textContent = `R$ ${totalRevenue.toLocaleString('pt-BR')}`;
-                
-                // Atualizar contadores de SDR Resgate
                 document.getElementById('total-sdr-resgate').textContent = `R$ ${totalResgateRevenue.toLocaleString('pt-BR')}`;
                 document.getElementById('resgate-accounts-sold').textContent = `${totalResgateAccounts} contas`;
                 
-                // Atualizar barras de progresso
-                const accountsProgress = (totalAccounts / accountsGoal) * 100;
-                document.getElementById('accounts-progress').style.width = `${Math.min(accountsProgress, 100)}%`;
+                // Atualizar progresso
+                document.getElementById('accounts-progress').style.width = `${Math.min((totalAccounts / accountsGoal) * 100, 100)}%`;
+                document.getElementById('revenue-progress').style.width = `${Math.min((totalRevenue / revenueGoal) * 100, 100)}%`;
+                document.getElementById('resgate-progress').style.width = `${Math.min((totalResgateAccounts / resgateGoal) * 100, 100)}%`;
                 
-                const revenueProgress = (totalRevenue / revenueGoal) * 100;
-                document.getElementById('revenue-progress').style.width = `${Math.min(revenueProgress, 100)}%`;
+                // Atualizar tops
+                const topSdr = [...sdrData].sort((a, b) => b.revenue - a.revenue)[0];
+                document.getElementById('top-sdr').textContent = topSdr.revenue > 0 ? topSdr.name : "-";
+                document.getElementById('top-sdr-accounts').textContent = `${topSdr.accounts} contas`;
                 
-                const resgateProgress = (totalResgateAccounts / resgateGoal) * 100;
-                document.getElementById('resgate-progress').style.width = `${Math.min(resgateProgress, 100)}%`;
+                const topCloser = [...closerData].sort((a, b) => b.accounts - a.accounts)[0];
+                document.getElementById('top-closer').textContent = topCloser.accounts > 0 ? topCloser.name : "-";
+                document.getElementById('top-closer-accounts').textContent = `${topCloser.accounts} contas`;
                 
-                // Atualizar SDR do mês
-                const topSdr = sdrData[0];
-                document.getElementById('top-sdr').textContent = (topSdr.revenue || 0) > 0 ? topSdr.name : "-";
-                document.getElementById('top-sdr-accounts').textContent = `${topSdr.accounts || 0} contas`;
+                const topSdrResgate = [...sdrResgateData].sort((a, b) => b.revenue - a.revenue)[0];
+                document.getElementById('top-sdr-resgate').textContent = topSdrResgate.revenue > 0 ? topSdrResgate.name : "-";
+                document.getElementById('top-sdr-resgate-accounts').textContent = `${topSdrResgate.accounts} contas`;
                 
-                // Atualizar Closer do mês
-                const topCloser = closerData[0];
-                document.getElementById('top-closer').textContent = (topCloser.accounts || 0) > 0 ? topCloser.name : "-";
-                document.getElementById('top-closer-accounts').textContent = `${topCloser.accounts || 0} contas`;
+                // Atualizar gráficos
+                updateSingleChart('sdr');
+                updateSingleChart('closer');
+                updateSingleChart('sdr-resgate');
                 
-                // Atualizar SDR Resgate do mês
-                const topSdrResgate = sdrResgateData[0];
-                document.getElementById('top-sdr-resgate').textContent = (topSdrResgate.revenue || 0) > 0 ? topSdrResgate.name : "-";
-                document.getElementById('top-sdr-resgate-accounts').textContent = `${topSdrResgate.accounts || 0} contas`;
-                
-                // Atualizar conquistas
-                updateAchievements();
             } catch (error) {
                 console.error("Erro ao atualizar gráficos:", error);
-                alert("Erro ao carregar dados. Os dados serão resetados.");
-                resetData();
-            }
-        }
-        
-        function updateAchievements() {
-            const topSdr = sdrData[0];
-            const topCloser = closerData[0];
-            const topSdrResgate = sdrResgateData[0];
-            
-            // SDR do Mês
-            const sdrOfMonth = document.querySelector('.achievement:nth-child(3)');
-            sdrOfMonth.querySelector('p').textContent = (topSdr.revenue || 0) > 0 ? topSdr.name : "-";
-            if ((topSdr.revenue || 0) > 0) {
-                sdrOfMonth.classList.add('unlocked');
-            } else {
-                sdrOfMonth.classList.remove('unlocked');
-            }
-            
-            // Meta Batida SDR
-            const sdrGoal = document.querySelector('.achievement:nth-child(1)');
-            if ((topSdr.accounts || 0) >= 34) {
-                sdrGoal.classList.add('unlocked');
-            } else {
-                sdrGoal.classList.remove('unlocked');
-            }
-            
-            // Super Meta SDR
-            const sdrSuperGoal = document.querySelector('.achievement:nth-child(2)');
-            if ((topSdr.accounts || 0) >= 44) {
-                sdrSuperGoal.classList.add('unlocked');
-            } else {
-                sdrSuperGoal.classList.remove('unlocked');
-            }
-            
-            // Closer do Mês
-            const closerOfMonth = document.querySelector('.achievement:nth-child(6)');
-            closerOfMonth.querySelector('p').textContent = (topCloser.accounts || 0) > 0 ? topCloser.name : "-";
-            if ((topCloser.accounts || 0) > 0) {
-                closerOfMonth.classList.add('unlocked');
-            } else {
-                closerOfMonth.classList.remove('unlocked');
-            }
-            
-            // Meta Batida Closer
-            const closerGoal = document.querySelector('.achievement:nth-child(4)');
-            if ((topCloser.accounts || 0) >= 44) {
-                closerGoal.classList.add('unlocked');
-            } else {
-                closerGoal.classList.remove('unlocked');
-            }
-            
-            // Super Meta Closer
-            const closerSuperGoal = document.querySelector('.achievement:nth-child(5)');
-            if ((topCloser.accounts || 0) >= 55) {
-                closerSuperGoal.classList.add('unlocked');
-            } else {
-                closerSuperGoal.classList.remove('unlocked');
-            }
-            
-            // SDR Resgate do Mês
-            const sdrResgateOfMonth = document.querySelector('.achievement:nth-child(8)');
-            sdrResgateOfMonth.querySelector('p').textContent = (topSdrResgate.revenue || 0) > 0 ? topSdrResgate.name : "-";
-            if ((topSdrResgate.revenue || 0) > 0) {
-                sdrResgateOfMonth.classList.add('unlocked');
-            } else {
-                sdrResgateOfMonth.classList.remove('unlocked');
-            }
-            
-            // Meta Batida SDR Resgate
-            const sdrResgateGoal = document.querySelector('.achievement:nth-child(7)');
-            if ((topSdrResgate.accounts || 0) >= 50) {
-                sdrResgateGoal.classList.add('unlocked');
-            } else {
-                sdrResgateGoal.classList.remove('unlocked');
             }
         }
 
-        // FUNÇÃO DE CELEBRAÇÃO
-        function triggerCelebration() {
-            // Criar overlay de celebração
-            const overlay = document.createElement('div');
-            overlay.className = 'celebration-overlay';
-            document.body.appendChild(overlay);
-            
-            // Criar texto de celebração
-            const celebrationText = document.createElement('div');
-            celebrationText.className = 'celebration-text';
-            celebrationText.innerHTML = '🎉 VENDA REGISTRADA! 🎉';
-            document.body.appendChild(celebrationText);
-            
-            // Fogos de artifício com confetti
-            confetti({
-                particleCount: 150,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#FF6B35', '#FFA726', '#FF4081', '#4CAF50', '#2196F3']
+        // Event listeners para filtros
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const chart = this.dataset.chart;
+                const type = this.dataset.type;
+                
+                // Atualizar botões ativos
+                this.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Atualizar configuração e gráfico
+                chartConfigs[chart].type = type;
+                updateSingleChart(chart);
             });
-            
-            // Mais confetti após delay
-            setTimeout(() => {
-                confetti({
-                    particleCount: 100,
-                    angle: 60,
-                    spread: 55,
-                    origin: { x: 0 },
-                    colors: ['#FF6B35', '#FFA726', '#FF4081']
-                });
-            }, 250);
-            
-            setTimeout(() => {
-                confetti({
-                    particleCount: 100,
-                    angle: 120,
-                    spread: 55,
-                    origin: { x: 1 },
-                    colors: ['#4CAF50', '#2196F3', '#FFA726']
-                });
-            }, 500);
-            
-            // Criar partículas customizadas
-            createCustomParticles();
-            
-            // Limpar elementos após animação
-            setTimeout(() => {
-                overlay.remove();
-                celebrationText.remove();
-            }, 2000);
-        }
+        });
 
-        function createCustomParticles() {
-            const colors = ['#FF6B35', '#FFA726', '#FF4081', '#4CAF50', '#2196F3'];
-            for (let i = 0; i < 30; i++) {
-                setTimeout(() => {
-                    const particle = document.createElement('div');
-                    particle.className = 'particle';
-                    particle.style.background = colors[Math.floor(Math.random() * colors.length)];
-                    particle.style.left = Math.random() * 100 + 'vw';
-                    particle.style.top = '100vh';
-                    document.body.appendChild(particle);
-                    
-                    // Animação da partícula
-                    const animation = particle.animate([
-                        { transform: 'translateY(0) scale(1)', opacity: 1 },
-                        { transform: `translateY(-${Math.random() * 300 + 200}px) scale(0)`, opacity: 0 }
-                    ], {
-                        duration: Math.random() * 2000 + 1000,
-                        easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)'
-                    });
-                    
-                    animation.onfinish = () => particle.remove();
-                }, i * 100);
-            }
-        }
-        
         // ===============================
         // EVENT LISTENERS
         // ===============================
@@ -2082,6 +1938,83 @@
             
             showToast();
         });
+
+        // FUNÇÃO DE CELEBRAÇÃO
+        function triggerCelebration() {
+            // Criar overlay de celebração
+            const overlay = document.createElement('div');
+            overlay.className = 'celebration-overlay';
+            document.body.appendChild(overlay);
+            
+            // Criar texto de celebração
+            const celebrationText = document.createElement('div');
+            celebrationText.className = 'celebration-text';
+            celebrationText.innerHTML = '🎉 VENDA REGISTRADA! 🎉';
+            document.body.appendChild(celebrationText);
+            
+            // Fogos de artifício com confetti
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#FF6B35', '#FFA726', '#FF4081', '#4CAF50', '#2196F3']
+            });
+            
+            // Mais confetti após delay
+            setTimeout(() => {
+                confetti({
+                    particleCount: 100,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#FF6B35', '#FFA726', '#FF4081']
+                });
+            }, 250);
+            
+            setTimeout(() => {
+                confetti({
+                    particleCount: 100,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#4CAF50', '#2196F3', '#FFA726']
+                });
+            }, 500);
+            
+            // Criar partículas customizadas
+            createCustomParticles();
+            
+            // Limpar elementos após animação
+            setTimeout(() => {
+                overlay.remove();
+                celebrationText.remove();
+            }, 2000);
+        }
+
+        function createCustomParticles() {
+            const colors = ['#FF6B35', '#FFA726', '#FF4081', '#4CAF50', '#2196F3'];
+            for (let i = 0; i < 30; i++) {
+                setTimeout(() => {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    particle.style.left = Math.random() * 100 + 'vw';
+                    particle.style.top = '100vh';
+                    document.body.appendChild(particle);
+                    
+                    // Animação da partícula
+                    const animation = particle.animate([
+                        { transform: 'translateY(0) scale(1)', opacity: 1 },
+                        { transform: `translateY(-${Math.random() * 300 + 200}px) scale(0)`, opacity: 0 }
+                    ], {
+                        duration: Math.random() * 2000 + 1000,
+                        easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)'
+                    });
+                    
+                    animation.onfinish = () => particle.remove();
+                }, i * 100);
+            }
+        }
 
         // ===============================
         // INICIALIZAÇÃO
