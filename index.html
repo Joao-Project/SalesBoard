@@ -1573,10 +1573,10 @@
         }
 
         // ===============================
-        // FUNÇÕES DOS GRÁFICOS - NOVO ESTILO
+        // FUNÇÕES DOS GRÁFICOS - COM NIVELAMENTO CORRIGIDO
         // ===============================
 
-        // Função para criar gráfico clean
+        // Função para criar gráfico com nivelamento adequado
         function updateSingleChart(chartId) {
             const chartElement = document.getElementById(`${chartId}-chart`);
             const config = chartConfigs[chartId];
@@ -1629,10 +1629,28 @@
             const barsContainer = document.createElement('div');
             barsContainer.className = 'chart-bars';
             
+            // NIVELAMENTO MELHORADO: Usar escala logarítmica para melhor distribuição visual
+            // Isso garante que diferenças entre valores sejam visualmente representativas
+            const logMax = Math.log10(maxValue + 1); // +1 para evitar log(0)
+            
             // Criar barras
             data.forEach((item, index) => {
                 const value = config.type === 'revenue' ? item.revenue : item.accounts;
-                const barHeight = Math.max((value / maxValue) * 80, 10); // Mínimo 10% de altura
+                
+                // Cálculo de altura com nivelamento aprimorado
+                let barHeight;
+                if (maxValue === 0) {
+                    barHeight = 10; // Altura mínima se não há valores
+                } else {
+                    // Usar escala logarítmica para melhor visualização de grandes diferenças
+                    const normalizedValue = Math.log10(value + 1) / logMax;
+                    barHeight = Math.max(normalizedValue * 80, 10); // Mínimo 10%, máximo 80%
+                    
+                    // Ajuste adicional: garantir que o maior valor ocupe 90% da altura
+                    if (value === maxValue && maxValue > 0) {
+                        barHeight = 90;
+                    }
+                }
                 
                 const barWrapper = document.createElement('div');
                 barWrapper.className = 'chart-bar-wrapper';
