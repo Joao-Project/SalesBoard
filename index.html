@@ -1748,32 +1748,7 @@ function updateSingleChart(chartId) {
                 updateSingleChart(chart);
             });
         });
-// ===============================
-// FUNÇÕES DE FORÇAR ATUALIZAÇÃO
-// ===============================
 
-// Função para FORÇAR atualização dos gráficos
-function forceUpdateCharts() {
-    console.log('🚀 FORÇANDO atualização de gráficos...');
-    
-    // Atualizar estatísticas
-    document.getElementById('total-accounts').textContent = totalAccounts;
-    document.getElementById('total-revenue').textContent = `R$ ${totalRevenue.toLocaleString('pt-BR')}`;
-    document.getElementById('total-sdr-resgate').textContent = `R$ ${totalResgateRevenue.toLocaleString('pt-BR')}`;
-    document.getElementById('resgate-accounts-sold').textContent = `${totalResgateAccounts} contas`;
-    
-    // Atualizar progresso
-    document.getElementById('accounts-progress').style.width = `${Math.min((totalAccounts / accountsGoal) * 100, 100)}%`;
-    document.getElementById('revenue-progress').style.width = `${Math.min((totalRevenue / revenueGoal) * 100, 100)}%`;
-    document.getElementById('resgate-progress').style.width = `${Math.min((totalResgateAccounts / resgateGoal) * 100, 100)}%`;
-    
-    // FORÇAR atualização dos gráficos
-    updateSingleChart('sdr');
-    updateSingleChart('closer');
-    updateSingleChart('sdr-resgate');
-    
-    console.log('✅ Atualização forçada concluída');
-}
 
 // Adicionar botão de força (temporário) para debug
 function addForceUpdateButton() {
@@ -2099,17 +2074,10 @@ function addForceUpdateButton() {
         // ===============================
 
         // Iniciar ouvindo mudanças do Firebase
-        listenToFirebaseChanges();
+       listenToFirebaseChanges();
 loadRecentSales();
-
-// Adicionar botão de força para debug
-addForceUpdateButton();
-
-// FORÇAR atualização inicial
-setTimeout(() => {
-    console.log('🎯 INICIANDO ATUALIZAÇÃO FORÇADA...');
-    forceUpdateCharts();
-}, 1000);
+updateCharts();
+    
         // Carregar dados iniciais do Firebase
         database.ref('salesData').once('value').then((snapshot) => {
             const data = snapshot.val();
@@ -2137,5 +2105,6 @@ setTimeout(() => {
     </script>
 </body>
 </html>
+
 
 
