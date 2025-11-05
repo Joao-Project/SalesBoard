@@ -1576,108 +1576,122 @@
         // FUNÇÕES DOS GRÁFICOS - COM NIVELAMENTO CORRIGIDO
         // ===============================
 
-        // Função para criar gráfico com nivelamento adequado
-        function updateSingleChart(chartId) {
-            const chartElement = document.getElementById(`${chartId}-chart`);
-            const config = chartConfigs[chartId];
+
+function updateSingleChart(chartId) {
+    const chartElement = document.getElementById(`${chartId}-chart`);
+    const config = chartConfigs[chartId];
+    
+    if (!chartElement) return;
+    
+    // Limpar gráfico
+    chartElement.innerHTML = '';
+    
+    let data = [];
+    let maxValue = 1;
+    
+    // Selecionar dados
+    switch(chartId) {
+        case 'sdr':
+            data = [...sdrData];
+            break;
+        case 'closer':
+            data = [...closerData];
+            break;
+        case 'sdr-resgate':
+            data = [...sdrResgateData];
+            break;
+    }
+    
+    // Calcular valor máximo baseado no tipo selecionado
+    maxValue = Math.max(...data.map(item => config.type === 'revenue' ? item.revenue : item.accounts), 1);
+    
+    // Ordenar dados
+    data.sort((a, b) => {
+        const aValue = config.type === 'revenue' ? a.revenue : a.accounts;
+        const bValue = config.type === 'revenue' ? b.revenue : b.accounts;
+        return bValue - aValue;
+    });
+    
+    // Verificar se há dados
+    const hasData = data.some(item => (config.type === 'revenue' ? item.revenue : item.accounts) > 0);
+    
+    if (!hasData) {
+        chartElement.innerHTML = `
+            <div class="chart-empty">
+                <i class="fas fa-chart-bar"></i>
+                <p>Nenhum dado disponível</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Criar container das barras
+    const barsContainer = document.createElement('div');
+    barsContainer.className = 'chart-bars';
+    
+    // NIVELAMENTO SIMPLES E DIRETO
+    // Se todos os valores forem zero, usar alturas mínimas
+    if (maxValue === 0) {
+        data.forEach((item, index) => {
+            const barWrapper = document.createElement('div');
+            barWrapper.className = 'chart-bar-wrapper';
             
-            if (!chartElement) return;
+            barWrapper.innerHTML = `
+                <div class="chart-bar ${chartId === 'sdr-resgate' ? 'resgate' : ''}" 
+                     style="height: 10%">
+                    <div class="chart-bar-value">R$ 0</div>
+                </div>
+                <div class="chart-bar-label">${item.name.split(' ')[0]}</div>
+            `;
             
-            // Limpar gráfico
-            chartElement.innerHTML = '';
+            barsContainer.appendChild(barWrapper);
+        });
+    } else {
+        // NIVELAMENTO PROPORCIONAL DIRETO
+        data.forEach((item, index) => {
+            const value = config.type === 'revenue' ? item.revenue : item.accounts;
             
-            let data = [];
-            let maxValue = 1;
-            
-            // Selecionar dados
-            switch(chartId) {
-                case 'sdr':
-                    data = [...sdrData];
-                    break;
-                case 'closer':
-                    data = [...closerData];
-                    break;
-                case 'sdr-resgate':
-                    data = [...sdrResgateData];
-                    break;
-            }
-            
-            // Calcular valor máximo baseado no tipo selecionado
-            maxValue = Math.max(...data.map(item => config.type === 'revenue' ? item.revenue : item.accounts), 1);
-            
-            // Ordenar dados
-            data.sort((a, b) => {
-                const aValue = config.type === 'revenue' ? a.revenue : a.accounts;
-                const bValue = config.type === 'revenue' ? b.revenue : b.accounts;
-                return bValue - aValue;
-            });
-            
-            // Verificar se há dados
-            const hasData = data.some(item => (config.type === 'revenue' ? item.revenue : item.accounts) > 0);
-            
-            if (!hasData) {
-                chartElement.innerHTML = `
-                    <div class="chart-empty">
-                        <i class="fas fa-chart-bar"></i>
-                        <p>Nenhum dado disponível</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            // Criar container das barras
-            const barsContainer = document.createElement('div');
-            barsContainer.className = 'chart-bars';
-            
-            // NIVELAMENTO MELHORADO: Usar escala logarítmica para melhor distribuição visual
-            // Isso garante que diferenças entre valores sejam visualmente representativas
-            const logMax = Math.log10(maxValue + 1); // +1 para evitar log(0)
-            
-            // Criar barras
-            data.forEach((item, index) => {
-                const value = config.type === 'revenue' ? item.revenue : item.accounts;
+            // Cálculo DIRETO e SIMPLES da altura
+            let barHeight;
+            if (value === 0) {
+                barHeight = 5; // Altura mínima para zero
+            } else {
+                // Cálculo DIRETO: (valor / valor máximo) * 85 + 10
+                barHeight = (value / maxValue) * 85 + 10;
                 
-                // Cálculo de altura com nivelamento aprimorado
-                let barHeight;
-                if (maxValue === 0) {
-                    barHeight = 10; // Altura mínima se não há valores
-                } else {
-                    // Usar escala logarítmica para melhor visualização de grandes diferenças
-                    const normalizedValue = Math.log10(value + 1) / logMax;
-                    barHeight = Math.max(normalizedValue * 80, 10); // Mínimo 10%, máximo 80%
-                    
-                    // Ajuste adicional: garantir que o maior valor ocupe 90% da altura
-                    if (value === maxValue && maxValue > 0) {
-                        barHeight = 90;
-                    }
+                // Garantir que o maior valor tenha 95%
+                if (value === maxValue) {
+                    barHeight = 95;
                 }
-                
-                const barWrapper = document.createElement('div');
-                barWrapper.className = 'chart-bar-wrapper';
-                
-                const displayValue = config.type === 'revenue' 
-                    ? `R$ ${Math.round(value).toLocaleString('pt-BR')}` 
-                    : `${value}`;
-                
-                barWrapper.innerHTML = `
-                    <div class="chart-bar ${chartId === 'sdr-resgate' ? 'resgate' : ''}" 
-                         style="height: ${barHeight}%">
-                        <div class="chart-bar-value">${displayValue}</div>
-                    </div>
-                    <div class="chart-bar-label">${item.name.split(' ')[0]}</div>
-                `;
-                
-                barsContainer.appendChild(barWrapper);
-                
-                // Animação de entrada
-                setTimeout(() => {
-                    const bar = barWrapper.querySelector('.chart-bar');
-                    bar.style.transform = 'scaleY(1)';
-                }, index * 100);
-            });
+            }
             
-            chartElement.appendChild(barsContainer);
-        }
+            const barWrapper = document.createElement('div');
+            barWrapper.className = 'chart-bar-wrapper';
+            
+            const displayValue = config.type === 'revenue' 
+                ? `R$ ${Math.round(value).toLocaleString('pt-BR')}` 
+                : `${value}`;
+            
+            barWrapper.innerHTML = `
+                <div class="chart-bar ${chartId === 'sdr-resgate' ? 'resgate' : ''}" 
+                     style="height: ${barHeight}%">
+                    <div class="chart-bar-value">${displayValue}</div>
+                </div>
+                <div class="chart-bar-label">${item.name.split(' ')[0]}</div>
+            `;
+            
+            barsContainer.appendChild(barWrapper);
+            
+            // Animação de entrada
+            setTimeout(() => {
+                const bar = barWrapper.querySelector('.chart-bar');
+                bar.style.transform = 'scaleY(1)';
+            }, index * 100);
+        });
+    }
+    
+    chartElement.appendChild(barsContainer);
+}
 
         // Função principal para atualizar todos os gráficos
         function updateCharts() {
@@ -2070,3 +2084,4 @@
     </script>
 </body>
 </html>
+
