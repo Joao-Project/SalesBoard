@@ -1576,34 +1576,46 @@
         // FUNÇÕES DOS GRÁFICOS - COM NIVELAMENTO CORRIGIDO
         // ===============================
 
-
 function updateSingleChart(chartId) {
     const chartElement = document.getElementById(`${chartId}-chart`);
     const config = chartConfigs[chartId];
     
     if (!chartElement) return;
     
+    console.log(`🔄 Atualizando gráfico: ${chartId}`, config.type);
+    
     // Limpar gráfico
     chartElement.innerHTML = '';
     
     let data = [];
-    let maxValue = 1;
+    let maxValue = 0;
     
     // Selecionar dados
     switch(chartId) {
         case 'sdr':
             data = [...sdrData];
+            console.log('📊 Dados SDR:', data);
             break;
         case 'closer':
             data = [...closerData];
+            console.log('📊 Dados Closer:', data);
             break;
         case 'sdr-resgate':
             data = [...sdrResgateData];
+            console.log('📊 Dados SDR Resgate:', data);
             break;
     }
     
     // Calcular valor máximo baseado no tipo selecionado
-    maxValue = Math.max(...data.map(item => config.type === 'revenue' ? item.revenue : item.accounts), 1);
+    data.forEach(item => {
+        const value = config.type === 'revenue' ? item.revenue : item.accounts;
+        if (value > maxValue) maxValue = value;
+    });
+    
+    // Se maxValue for 0, definir como 1 para evitar divisão por zero
+    if (maxValue === 0) maxValue = 1;
+    
+    console.log(`📈 Valor máximo para ${chartId}:`, maxValue);
     
     // Ordenar dados
     data.sort((a, b) => {
@@ -1629,68 +1641,59 @@ function updateSingleChart(chartId) {
     const barsContainer = document.createElement('div');
     barsContainer.className = 'chart-bars';
     
-    // NIVELAMENTO SIMPLES E DIRETO
-    // Se todos os valores forem zero, usar alturas mínimas
-    if (maxValue === 0) {
-        data.forEach((item, index) => {
-            const barWrapper = document.createElement('div');
-            barWrapper.className = 'chart-bar-wrapper';
+    // NIVELAMENTO FORÇADO - CÁLCULO DIRETO
+    data.forEach((item, index) => {
+        const value = config.type === 'revenue' ? item.revenue : item.accounts;
+        
+        console.log(`📊 Processando ${item.name}:`, value);
+        
+        // CÁLCULO DIRETO E SIMPLES
+        let barHeight;
+        if (value === 0) {
+            barHeight = 10; // Altura mínima para zero
+        } else {
+            // Cálculo proporcional DIRETO
+            barHeight = (value / maxValue) * 80;
             
-            barWrapper.innerHTML = `
-                <div class="chart-bar ${chartId === 'sdr-resgate' ? 'resgate' : ''}" 
-                     style="height: 10%">
-                    <div class="chart-bar-value">R$ 0</div>
-                </div>
-                <div class="chart-bar-label">${item.name.split(' ')[0]}</div>
-            `;
+            // Garantir altura mínima para valores não-zero
+            barHeight = Math.max(barHeight, 15);
             
-            barsContainer.appendChild(barWrapper);
-        });
-    } else {
-        // NIVELAMENTO PROPORCIONAL DIRETO
-        data.forEach((item, index) => {
-            const value = config.type === 'revenue' ? item.revenue : item.accounts;
-            
-            // Cálculo DIRETO e SIMPLES da altura
-            let barHeight;
-            if (value === 0) {
-                barHeight = 5; // Altura mínima para zero
-            } else {
-                // Cálculo DIRETO: (valor / valor máximo) * 85 + 10
-                barHeight = (value / maxValue) * 85 + 10;
-                
-                // Garantir que o maior valor tenha 95%
-                if (value === maxValue) {
-                    barHeight = 95;
-                }
+            // Garantir que o maior valor tenha altura máxima
+            if (value === maxValue) {
+                barHeight = 90;
             }
-            
-            const barWrapper = document.createElement('div');
-            barWrapper.className = 'chart-bar-wrapper';
-            
-            const displayValue = config.type === 'revenue' 
-                ? `R$ ${Math.round(value).toLocaleString('pt-BR')}` 
-                : `${value}`;
-            
-            barWrapper.innerHTML = `
-                <div class="chart-bar ${chartId === 'sdr-resgate' ? 'resgate' : ''}" 
-                     style="height: ${barHeight}%">
-                    <div class="chart-bar-value">${displayValue}</div>
-                </div>
-                <div class="chart-bar-label">${item.name.split(' ')[0]}</div>
-            `;
-            
-            barsContainer.appendChild(barWrapper);
-            
-            // Animação de entrada
-            setTimeout(() => {
-                const bar = barWrapper.querySelector('.chart-bar');
+        }
+        
+        console.log(`📏 Altura calculada para ${item.name}: ${barHeight}%`);
+        
+        const barWrapper = document.createElement('div');
+        barWrapper.className = 'chart-bar-wrapper';
+        
+        const displayValue = config.type === 'revenue' 
+            ? `R$ ${Math.round(value).toLocaleString('pt-BR')}` 
+            : `${value}`;
+        
+        barWrapper.innerHTML = `
+            <div class="chart-bar ${chartId === 'sdr-resgate' ? 'resgate' : ''}" 
+                 style="height: ${barHeight}%">
+                <div class="chart-bar-value">${displayValue}</div>
+            </div>
+            <div class="chart-bar-label">${item.name.split(' ')[0]}</div>
+        `;
+        
+        barsContainer.appendChild(barWrapper);
+        
+        // Animação de entrada
+        setTimeout(() => {
+            const bar = barWrapper.querySelector('.chart-bar');
+            if (bar) {
                 bar.style.transform = 'scaleY(1)';
-            }, index * 100);
-        });
-    }
+            }
+        }, index * 100);
+    });
     
     chartElement.appendChild(barsContainer);
+    console.log(`✅ Gráfico ${chartId} atualizado com sucesso`);
 }
 
         // Função principal para atualizar todos os gráficos
@@ -1745,7 +1748,50 @@ function updateSingleChart(chartId) {
                 updateSingleChart(chart);
             });
         });
+// ===============================
+// FUNÇÕES DE FORÇAR ATUALIZAÇÃO
+// ===============================
 
+// Função para FORÇAR atualização dos gráficos
+function forceUpdateCharts() {
+    console.log('🚀 FORÇANDO atualização de gráficos...');
+    
+    // Atualizar estatísticas
+    document.getElementById('total-accounts').textContent = totalAccounts;
+    document.getElementById('total-revenue').textContent = `R$ ${totalRevenue.toLocaleString('pt-BR')}`;
+    document.getElementById('total-sdr-resgate').textContent = `R$ ${totalResgateRevenue.toLocaleString('pt-BR')}`;
+    document.getElementById('resgate-accounts-sold').textContent = `${totalResgateAccounts} contas`;
+    
+    // Atualizar progresso
+    document.getElementById('accounts-progress').style.width = `${Math.min((totalAccounts / accountsGoal) * 100, 100)}%`;
+    document.getElementById('revenue-progress').style.width = `${Math.min((totalRevenue / revenueGoal) * 100, 100)}%`;
+    document.getElementById('resgate-progress').style.width = `${Math.min((totalResgateAccounts / resgateGoal) * 100, 100)}%`;
+    
+    // FORÇAR atualização dos gráficos
+    updateSingleChart('sdr');
+    updateSingleChart('closer');
+    updateSingleChart('sdr-resgate');
+    
+    console.log('✅ Atualização forçada concluída');
+}
+
+// Adicionar botão de força (temporário) para debug
+function addForceUpdateButton() {
+    const forceBtn = document.createElement('button');
+    forceBtn.textContent = '🔄 FORÇAR ATUALIZAÇÃO';
+    forceBtn.style.position = 'fixed';
+    forceBtn.style.top = '10px';
+    forceBtn.style.left = '10px';
+    forceBtn.style.zIndex = '10000';
+    forceBtn.style.background = '#FF6B35';
+    forceBtn.style.color = 'white';
+    forceBtn.style.border = 'none';
+    forceBtn.style.padding = '10px';
+    forceBtn.style.borderRadius = '5px';
+    forceBtn.style.cursor = 'pointer';
+    forceBtn.onclick = forceUpdateCharts;
+    document.body.appendChild(forceBtn);
+}
         // ===============================
         // EVENT LISTENERS
         // ===============================
@@ -2054,9 +2100,16 @@ function updateSingleChart(chartId) {
 
         // Iniciar ouvindo mudanças do Firebase
         listenToFirebaseChanges();
-        loadRecentSales();
-        updateCharts();
+loadRecentSales();
 
+// Adicionar botão de força para debug
+addForceUpdateButton();
+
+// FORÇAR atualização inicial
+setTimeout(() => {
+    console.log('🎯 INICIANDO ATUALIZAÇÃO FORÇADA...');
+    forceUpdateCharts();
+}, 1000);
         // Carregar dados iniciais do Firebase
         database.ref('salesData').once('value').then((snapshot) => {
             const data = snapshot.val();
@@ -2084,4 +2137,5 @@ function updateSingleChart(chartId) {
     </script>
 </body>
 </html>
+
 
