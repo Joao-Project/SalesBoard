@@ -329,16 +329,18 @@
         
         .chart-tooltip {
             position: absolute;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.9);
             color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 0.8rem;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
             z-index: 100;
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.3s;
             white-space: nowrap;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
         }
         
         .add-sale-btn {
@@ -893,7 +895,9 @@
                     Total SDR Resgate
                 </div>
                 <div class="stat-value" id="total-sdr-resgate">R$ 0</div>
-                <div class="stat-goal">Meta: 50 contas</div>
+                <div class="stat-goal">
+                    <span id="resgate-accounts-sold">0 contas</span> | Meta: 50 contas
+                </div>
                 <div class="progress-bar">
                     <div class="progress-fill" id="resgate-progress" style="width: 0%"></div>
                 </div>
@@ -1533,7 +1537,6 @@
                     bar.className = 'chart-bar';
                     bar.style.height = `${barHeight}%`;
                     bar.innerHTML = `
-                        <div class="chart-bar-value">R$ ${Math.round(revenue).toLocaleString('pt-BR')}</div>
                         <div class="chart-bar-accounts">${accounts} contas</div>
                         <div class="chart-bar-label">${sdr.name}</div>
                     `;
@@ -1541,18 +1544,22 @@
                     // Adicionar tooltip
                     const tooltip = document.createElement('div');
                     tooltip.className = 'chart-tooltip';
-                    tooltip.textContent = `Faturamento: R$ ${revenue.toLocaleString('pt-BR')} | Contas: ${accounts}`;
+                    tooltip.innerHTML = `
+                        <div><strong>${sdr.name}</strong></div>
+                        <div>Contas: ${accounts}</div>
+                        <div>Faturamento: R$ ${revenue.toLocaleString('pt-BR')}</div>
+                    `;
                     bar.appendChild(tooltip);
                     
                     // Eventos para tooltip
                     bar.addEventListener('mouseenter', function(e) {
                         tooltip.style.opacity = '1';
-                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
+                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 80}px`;
                         tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
                     });
                     
                     bar.addEventListener('mousemove', function(e) {
-                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
+                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 80}px`;
                         tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
                     });
                     
@@ -1578,25 +1585,29 @@
                     bar.className = 'chart-bar';
                     bar.style.height = `${barHeight}%`;
                     bar.innerHTML = `
-                        <div class="chart-bar-value">${accounts}</div>
+                        <div class="chart-bar-accounts">${accounts} contas</div>
                         <div class="chart-bar-label">${closer.name}</div>
                     `;
                     
                     // Adicionar tooltip
                     const tooltip = document.createElement('div');
                     tooltip.className = 'chart-tooltip';
-                    tooltip.textContent = `Contas: ${accounts} | Faturamento: R$ ${revenue.toLocaleString('pt-BR')}`;
+                    tooltip.innerHTML = `
+                        <div><strong>${closer.name}</strong></div>
+                        <div>Contas: ${accounts}</div>
+                        <div>Faturamento: R$ ${revenue.toLocaleString('pt-BR')}</div>
+                    `;
                     bar.appendChild(tooltip);
                     
                     // Eventos para tooltip
                     bar.addEventListener('mouseenter', function(e) {
                         tooltip.style.opacity = '1';
-                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
+                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 80}px`;
                         tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
                     });
                     
                     bar.addEventListener('mousemove', function(e) {
-                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
+                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 80}px`;
                         tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
                     });
                     
@@ -1622,7 +1633,6 @@
                     bar.className = 'chart-bar resgate';
                     bar.style.height = `${barHeight}%`;
                     bar.innerHTML = `
-                        <div class="chart-bar-value">R$ ${Math.round(revenue).toLocaleString('pt-BR')}</div>
                         <div class="chart-bar-accounts">${accounts} contas</div>
                         <div class="chart-bar-label">${sdr.name}</div>
                     `;
@@ -1630,18 +1640,22 @@
                     // Adicionar tooltip
                     const tooltip = document.createElement('div');
                     tooltip.className = 'chart-tooltip';
-                    tooltip.textContent = `Faturamento: R$ ${revenue.toLocaleString('pt-BR')} | Contas: ${accounts}`;
+                    tooltip.innerHTML = `
+                        <div><strong>${sdr.name}</strong></div>
+                        <div>Contas: ${accounts}</div>
+                        <div>Faturamento: R$ ${revenue.toLocaleString('pt-BR')}</div>
+                    `;
                     bar.appendChild(tooltip);
                     
                     // Eventos para tooltip
                     bar.addEventListener('mouseenter', function(e) {
                         tooltip.style.opacity = '1';
-                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
+                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 80}px`;
                         tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
                     });
                     
                     bar.addEventListener('mousemove', function(e) {
-                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 40}px`;
+                        tooltip.style.top = `${e.pageY - bar.getBoundingClientRect().top - 80}px`;
                         tooltip.style.left = `${e.pageX - bar.getBoundingClientRect().left - tooltip.offsetWidth/2}px`;
                     });
                     
@@ -1658,6 +1672,7 @@
                 
                 // Atualizar contadores de SDR Resgate
                 document.getElementById('total-sdr-resgate').textContent = `R$ ${totalResgateRevenue.toLocaleString('pt-BR')}`;
+                document.getElementById('resgate-accounts-sold').textContent = `${totalResgateAccounts} contas`;
                 
                 // Atualizar barras de progresso
                 const accountsProgress = (totalAccounts / accountsGoal) * 100;
