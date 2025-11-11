@@ -244,6 +244,7 @@
             padding: 25px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
         }
         
         .ranking-header {
@@ -265,99 +266,190 @@
             color: var(--primary);
         }
         
-        /* FILTROS SIMPLES - NOVO */
-        .chart-filters {
-            display: flex;
-            gap: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 4px;
-            border-radius: 12px;
-        }
-        
-        .filter-btn {
-            padding: 6px 16px;
-            background: transparent;
-            border: none;
-            border-radius: 8px;
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 600;
-        }
-        
-        .filter-btn.active {
-            background: var(--gradient);
-            color: white;
-        }
-        
-        /* GRÁFICOS FINETECH - NOVO */
+        /* GRÁFICOS - CORREÇÃO DA ESCALA BASEADA NA META */
         .chart-container {
             position: relative;
             height: 280px;
             margin-top: 10px;
             background: transparent;
             border-radius: 12px;
-            overflow: hidden;
-            padding: 0 10px;
+            overflow: visible;
+            padding: 0;
         }
         
         .chart-bars {
             display: flex;
-            align-items: flex-end;
-            justify-content: space-around;
+            flex-direction: column;
             height: 100%;
             gap: 15px;
+            padding: 10px 0;
         }
         
         .chart-bar-wrapper {
             display: flex;
-            flex-direction: column;
             align-items: center;
+            gap: 15px;
+            height: 50px;
+            position: relative;
+        }
+        
+        .chart-bar-label {
+            width: 120px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+            text-align: right;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .chart-bar-container {
             flex: 1;
-            max-width: 80px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+        }
+        
+        .chart-bar-bg {
+            flex: 1;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
         }
         
         .chart-bar {
-            width: 100%;
-            min-width: 50px;
+            height: 100%;
             background: var(--gradient);
-            border-radius: 8px 8px 0 0;
+            border-radius: 15px;
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             cursor: pointer;
-            min-height: 40px;
-            transform: scaleY(0);
-            transform-origin: bottom;
+            min-width: 20px;
+            transform: scaleX(0);
+            transform-origin: left;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
         }
         
         .chart-bar.resgate {
             background: var(--resgate-gradient);
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
         }
         
         .chart-bar:hover {
-            transform: scaleY(1) translateY(-2px);
-            filter: brightness(1.1);
+            transform: scaleX(1) !important;
+            filter: brightness(1.15);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
         }
         
-        .chart-bar-value {
-            position: absolute;
-            top: -25px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-weight: 700;
+        .chart-bar.resgate:hover {
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+        }
+        
+        .chart-bar-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 120px;
+        }
+        
+        .chart-bar-accounts {
             font-size: 0.9rem;
+            font-weight: 700;
             color: var(--text);
+            min-width: 40px;
+            text-align: right;
         }
         
-        .chart-bar-label {
-            margin-top: 8px;
-            text-align: center;
+        .chart-bar-revenue {
             font-size: 0.75rem;
             color: var(--text-secondary);
+            min-width: 80px;
+            text-align: right;
+        }
+        
+        /* TOOLTIP MELHORADO - AGORA FORA DO CONTAINER */
+        .chart-tooltip {
+            position: absolute;
+            background: rgba(15, 20, 25, 0.98);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            transform: translateY(-10px);
+            min-width: 180px;
+        }
+        
+        .chart-tooltip.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .tooltip-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--primary);
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 6px;
+        }
+        
+        .tooltip-content {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .tooltip-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .tooltip-label {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+        
+        .tooltip-value {
             font-weight: 600;
-            line-height: 1.2;
+            color: var(--text);
+            font-size: 0.85rem;
+        }
+        
+        .tooltip-progress {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .tooltip-progress-fill {
+            height: 100%;
+            background: var(--gradient);
+            border-radius: 2px;
+        }
+        
+        .chart-tooltip.resgate .tooltip-progress-fill {
+            background: var(--resgate-gradient);
         }
         
         /* GRÁFICO VAZIO */
@@ -830,7 +922,7 @@
             }
             
             .chart-bar {
-                min-width: 40px;
+                min-width: 20px;
             }
             
             header {
@@ -856,9 +948,26 @@
                 right: 25px;
             }
             
-            .chart-filters {
-                flex-wrap: wrap;
-                justify-content: center;
+            .chart-bar-label {
+                width: 80px;
+                font-size: 0.75rem;
+            }
+            
+            .chart-bar-info {
+                min-width: 100px;
+            }
+            
+            .chart-bar-accounts {
+                font-size: 0.8rem;
+            }
+            
+            .chart-bar-revenue {
+                font-size: 0.7rem;
+            }
+            
+            .chart-tooltip {
+                min-width: 160px;
+                font-size: 0.8rem;
             }
         }
     </style>
@@ -955,10 +1064,6 @@
                         <i class="fas fa-user-tie"></i>
                         Performance SDRs
                     </h2>
-                    <div class="chart-filters">
-                        <button class="filter-btn active" data-chart="sdr" data-type="revenue">Faturamento</button>
-                        <button class="filter-btn" data-chart="sdr" data-type="accounts">Contas</button>
-                    </div>
                 </div>
                 <div class="chart-container" id="sdr-chart">
                     <div class="chart-empty">
@@ -975,10 +1080,6 @@
                         <i class="fas fa-handshake"></i>
                         Performance Closers
                     </h2>
-                    <div class="chart-filters">
-                        <button class="filter-btn active" data-chart="closer" data-type="accounts">Contas</button>
-                        <button class="filter-btn" data-chart="closer" data-type="revenue">Faturamento</button>
-                    </div>
                 </div>
                 <div class="chart-container" id="closer-chart">
                     <div class="chart-empty">
@@ -995,10 +1096,6 @@
                         <i class="fas fa-user-plus"></i>
                         Performance SDR Resgate
                     </h2>
-                    <div class="chart-filters">
-                        <button class="filter-btn active" data-chart="sdr-resgate" data-type="revenue">Faturamento</button>
-                        <button class="filter-btn" data-chart="sdr-resgate" data-type="accounts">Contas</button>
-                    </div>
                 </div>
                 <div class="chart-container" id="sdr-resgate-chart">
                     <div class="chart-empty">
@@ -1015,42 +1112,42 @@
                 Conquistas
             </h2>
             <div class="achievements-grid">
-                <div class="achievement">
+                <div class="achievement" id="achievement-sdr-meta">
                     <div class="achievement-icon">🎯</div>
                     <h3 class="achievement-title">Meta Batida SDR</h3>
                     <p class="achievement-desc">34 contas fechadas</p>
                 </div>
-                <div class="achievement">
+                <div class="achievement" id="achievement-sdr-super">
                     <div class="achievement-icon">🚀</div>
                     <h3 class="achievement-title">Super Meta SDR</h3>
                     <p class="achievement-desc">44 contas fechadas</p>
                 </div>
-                <div class="achievement">
+                <div class="achievement" id="achievement-sdr-month">
                     <div class="achievement-icon">🥇</div>
                     <h3 class="achievement-title">SDR do Mês</h3>
                     <p class="achievement-desc">-</p>
                 </div>
-                <div class="achievement">
+                <div class="achievement" id="achievement-closer-meta">
                     <div class="achievement-icon">🎯</div>
                     <h3 class="achievement-title">Meta Batida Closer</h3>
                     <p class="achievement-desc">44 contas fechadas</p>
                 </div>
-                <div class="achievement">
+                <div class="achievement" id="achievement-closer-super">
                     <div class="achievement-icon">🚀</div>
                     <h3 class="achievement-title">Super Meta Closer</h3>
                     <p class="achievement-desc">55 contas fechadas</p>
                 </div>
-                <div class="achievement">
+                <div class="achievement" id="achievement-closer-month">
                     <div class="achievement-icon">🥇</div>
                     <h3 class="achievement-title">Closer do Mês</h3>
                     <p class="achievement-desc">-</p>
                 </div>
-                <div class="achievement">
+                <div class="achievement" id="achievement-resgate-meta">
                     <div class="achievement-icon">🎯</div>
                     <h3 class="achievement-title">Meta Batida SDR Resgate</h3>
                     <p class="achievement-desc">50 contas fechadas</p>
                 </div>
-                <div class="achievement">
+                <div class="achievement" id="achievement-resgate-month">
                     <div class="achievement-icon">🥇</div>
                     <h3 class="achievement-title">SDR Resgate do Mês</h3>
                     <p class="achievement-desc">-</p>
@@ -1261,20 +1358,22 @@
         let totalRevenue = 0;
         let totalResgateAccounts = 0;
         let totalResgateRevenue = 0;
-        const revenueGoal = 526680;
+        
+        // Metas atualizadas conforme solicitado
         const accountsGoal = 132;
+        const revenueGoal = 526680;
         const resgateGoal = 50;
+        
+        // Metas individuais
+        const sdrMeta = 34;
+        const sdrSuperMeta = 44;
+        const closerMeta = 44;
+        const closerSuperMeta = 55;
+        const resgateMeta = 50;
 
         let currentUser = {
             name: "",
             role: ""
-        };
-
-        // Configurações dos gráficos
-        const chartConfigs = {
-            'sdr': { type: 'revenue', data: [] },
-            'closer': { type: 'accounts', data: [] },
-            'sdr-resgate': { type: 'revenue', data: [] }
         };
 
         // ===============================
@@ -1573,128 +1672,212 @@
         }
 
         // ===============================
-        // FUNÇÕES DOS GRÁFICOS - COM NIVELAMENTO CORRIGIDO
+        // FUNÇÕES DOS GRÁFICOS - CORRIGIDAS PARA USAR META
         // ===============================
 
-function updateSingleChart(chartId) {
-    const chartElement = document.getElementById(`${chartId}-chart`);
-    const config = chartConfigs[chartId];
-    
-    if (!chartElement) return;
-    
-    console.log(`🔄 Atualizando gráfico: ${chartId}`, config.type);
-    
-    // Limpar gráfico
-    chartElement.innerHTML = '';
-    
-    let data = [];
-    let maxValue = 0;
-    
-    // Selecionar dados
-    switch(chartId) {
-        case 'sdr':
-            data = [...sdrData];
-            console.log('📊 Dados SDR:', data);
-            break;
-        case 'closer':
-            data = [...closerData];
-            console.log('📊 Dados Closer:', data);
-            break;
-        case 'sdr-resgate':
-            data = [...sdrResgateData];
-            console.log('📊 Dados SDR Resgate:', data);
-            break;
-    }
-    
-    // Calcular valor máximo baseado no tipo selecionado
-    data.forEach(item => {
-        const value = config.type === 'revenue' ? item.revenue : item.accounts;
-        if (value > maxValue) maxValue = value;
-    });
-    
-    // Se maxValue for 0, definir como 1 para evitar divisão por zero
-    if (maxValue === 0) maxValue = 1;
-    
-    console.log(`📈 Valor máximo para ${chartId}:`, maxValue);
-    
-    // Ordenar dados
-    data.sort((a, b) => {
-        const aValue = config.type === 'revenue' ? a.revenue : a.accounts;
-        const bValue = config.type === 'revenue' ? b.revenue : b.accounts;
-        return bValue - aValue;
-    });
-    
-    // Verificar se há dados
-    const hasData = data.some(item => (config.type === 'revenue' ? item.revenue : item.accounts) > 0);
-    
-    if (!hasData) {
-        chartElement.innerHTML = `
-            <div class="chart-empty">
-                <i class="fas fa-chart-bar"></i>
-                <p>Nenhum dado disponível</p>
-            </div>
-        `;
-        return;
-    }
-    
-    // Criar container das barras
-    const barsContainer = document.createElement('div');
-    barsContainer.className = 'chart-bars';
-    
-    // NIVELAMENTO FORÇADO - CÁLCULO DIRETO
-    data.forEach((item, index) => {
-        const value = config.type === 'revenue' ? item.revenue : item.accounts;
-        
-        console.log(`📊 Processando ${item.name}:`, value);
-        
-        // CÁLCULO DIRETO E SIMPLES
-        let barHeight;
-        if (value === 0) {
-            barHeight = 10; // Altura mínima para zero
-        } else {
-            // Cálculo proporcional DIRETO
-            barHeight = (value / maxValue) * 80;
+        function updateSingleChart(chartId) {
+            const chartElement = document.getElementById(`${chartId}-chart`);
             
-            // Garantir altura mínima para valores não-zero
-            barHeight = Math.max(barHeight, 15);
+            if (!chartElement) return;
             
-            // Garantir que o maior valor tenha altura máxima
-            if (value === maxValue) {
-                barHeight = 90;
+            console.log(`🔄 Atualizando gráfico: ${chartId}`);
+            
+            // Limpar gráfico
+            chartElement.innerHTML = '';
+            
+            let data = [];
+            
+            // Selecionar dados
+            switch(chartId) {
+                case 'sdr':
+                    data = [...sdrData];
+                    console.log('📊 Dados SDR:', data);
+                    break;
+                case 'closer':
+                    data = [...closerData];
+                    console.log('📊 Dados Closer:', data);
+                    break;
+                case 'sdr-resgate':
+                    data = [...sdrResgateData];
+                    console.log('📊 Dados SDR Resgate:', data);
+                    break;
+            }
+            
+            // Ordenar dados pelo número de contas (maior primeiro)
+            data.sort((a, b) => b.accounts - a.accounts);
+            
+            // Verificar se há dados
+            const hasData = data.some(item => item.accounts > 0);
+            
+            if (!hasData) {
+                chartElement.innerHTML = `
+                    <div class="chart-empty">
+                        <i class="fas fa-chart-bar"></i>
+                        <p>Nenhum dado disponível</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Criar container das barras
+            const barsContainer = document.createElement('div');
+            barsContainer.className = 'chart-bars';
+            
+            // Criar barras com progresso baseado na META INDIVIDUAL
+            data.forEach((item, index) => {
+                const accounts = item.accounts;
+                const revenue = item.revenue;
+                
+                console.log(`📊 Processando ${item.name}:`, accounts, 'contas', revenue, 'faturamento');
+                
+                // Determinar a meta correta para o tipo de gráfico
+                let meta;
+                if (chartId === 'sdr-resgate') {
+                    meta = resgateMeta; // Meta de 50 contas para SDR Resgate
+                } else if (chartId === 'sdr') {
+                    meta = sdrMeta; // Meta de 34 contas para SDRs
+                } else {
+                    meta = closerMeta; // Meta de 44 contas para Closers
+                }
+                
+                // CALCULAR PORCENTAGEM BASEADA NA META (não na escala entre vendedores)
+                let percentage = (accounts / meta) * 100;
+                // Limitar a 100% para não ultrapassar o container
+                if (percentage > 100) percentage = 100;
+                // Garantir que valores de 1 conta sejam visíveis (mínimo 5%)
+                if (accounts > 0 && percentage < 5) {
+                    percentage = 5;
+                }
+                
+                console.log(`📏 ${item.name}: ${accounts}/${meta} contas = ${percentage.toFixed(1)}% da meta`);
+                
+                const barWrapper = document.createElement('div');
+                barWrapper.className = 'chart-bar-wrapper';
+                
+                // Criar tooltip individual para cada barra
+                const tooltip = document.createElement('div');
+                tooltip.className = `chart-tooltip ${chartId === 'sdr-resgate' ? 'resgate' : ''}`;
+                tooltip.innerHTML = `
+                    <div class="tooltip-title">${item.name}</div>
+                    <div class="tooltip-content">
+                        <div class="tooltip-item">
+                            <span class="tooltip-label">Contas:</span>
+                            <span class="tooltip-value">${accounts}</span>
+                        </div>
+                        <div class="tooltip-item">
+                            <span class="tooltip-label">Faturamento:</span>
+                            <span class="tooltip-value">R$ ${revenue.toLocaleString('pt-BR')}</span>
+                        </div>
+                        <div class="tooltip-item">
+                            <span class="tooltip-label">Progresso:</span>
+                            <span class="tooltip-value">${percentage.toFixed(1)}% da meta</span>
+                        </div>
+                        <div class="tooltip-item">
+                            <span class="tooltip-label">Meta:</span>
+                            <span class="tooltip-value">${meta} contas</span>
+                        </div>
+                        <div class="tooltip-progress">
+                            <div class="tooltip-progress-fill" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+                
+                barWrapper.innerHTML = `
+                    <div class="chart-bar-label">${item.name}</div>
+                    <div class="chart-bar-container">
+                        <div class="chart-bar-bg">
+                            <div class="chart-bar ${chartId === 'sdr-resgate' ? 'resgate' : ''}" 
+                                 style="width: ${percentage}%">
+                            </div>
+                        </div>
+                        <div class="chart-bar-info">
+                            <div class="chart-bar-accounts">${accounts}</div>
+                            <div class="chart-bar-revenue">R$ ${revenue.toLocaleString('pt-BR')}</div>
+                        </div>
+                    </div>
+                `;
+                
+                // Adicionar tooltip ao wrapper
+                barWrapper.appendChild(tooltip);
+                
+                // Adicionar eventos de hover para o tooltip
+                const barContainer = barWrapper.querySelector('.chart-bar-container');
+                
+                barContainer.addEventListener('mouseenter', function(e) {
+                    const rect = barContainer.getBoundingClientRect();
+                    const chartRect = chartElement.getBoundingClientRect();
+                    
+                    // Posicionar tooltip acima do container do gráfico
+                    const tooltipTop = -tooltip.offsetHeight - 10;
+                    tooltip.style.left = '50%';
+                    tooltip.style.top = tooltipTop + 'px';
+                    tooltip.style.transform = 'translateX(-50%)';
+                    tooltip.classList.add('show');
+                });
+                
+                barContainer.addEventListener('mouseleave', function() {
+                    tooltip.classList.remove('show');
+                });
+                
+                barsContainer.appendChild(barWrapper);
+                
+                // Animação de entrada
+                setTimeout(() => {
+                    const bar = barWrapper.querySelector('.chart-bar');
+                    if (bar) {
+                        bar.style.transform = 'scaleX(1)';
+                    }
+                }, index * 100);
+            });
+            
+            chartElement.appendChild(barsContainer);
+            console.log(`✅ Gráfico ${chartId} atualizado com sucesso`);
+        }
+
+        // Atualizar conquistas
+        function updateAchievements() {
+            // Atualizar conquistas de SDR
+            const topSdr = [...sdrData].sort((a, b) => b.accounts - a.accounts)[0];
+            if (topSdr.accounts >= sdrMeta) {
+                document.getElementById('achievement-sdr-meta').classList.add('unlocked');
+            }
+            if (topSdr.accounts >= sdrSuperMeta) {
+                document.getElementById('achievement-sdr-super').classList.add('unlocked');
+            }
+            
+            // Atualizar conquistas de Closer
+            const topCloser = [...closerData].sort((a, b) => b.accounts - a.accounts)[0];
+            if (topCloser.accounts >= closerMeta) {
+                document.getElementById('achievement-closer-meta').classList.add('unlocked');
+            }
+            if (topCloser.accounts >= closerSuperMeta) {
+                document.getElementById('achievement-closer-super').classList.add('unlocked');
+            }
+            
+            // Atualizar conquistas de SDR Resgate
+            const topSdrResgate = [...sdrResgateData].sort((a, b) => b.accounts - a.accounts)[0];
+            if (topSdrResgate.accounts >= resgateMeta) {
+                document.getElementById('achievement-resgate-meta').classList.add('unlocked');
+            }
+            
+            // Atualizar SDR do Mês
+            if (topSdr.accounts > 0) {
+                document.getElementById('achievement-sdr-month').querySelector('.achievement-desc').textContent = topSdr.name;
+                document.getElementById('achievement-sdr-month').classList.add('unlocked');
+            }
+            
+            // Atualizar Closer do Mês
+            if (topCloser.accounts > 0) {
+                document.getElementById('achievement-closer-month').querySelector('.achievement-desc').textContent = topCloser.name;
+                document.getElementById('achievement-closer-month').classList.add('unlocked');
+            }
+            
+            // Atualizar SDR Resgate do Mês
+            if (topSdrResgate.accounts > 0) {
+                document.getElementById('achievement-resgate-month').querySelector('.achievement-desc').textContent = topSdrResgate.name;
+                document.getElementById('achievement-resgate-month').classList.add('unlocked');
             }
         }
-        
-        console.log(`📏 Altura calculada para ${item.name}: ${barHeight}%`);
-        
-        const barWrapper = document.createElement('div');
-        barWrapper.className = 'chart-bar-wrapper';
-        
-        const displayValue = config.type === 'revenue' 
-            ? `R$ ${Math.round(value).toLocaleString('pt-BR')}` 
-            : `${value}`;
-        
-        barWrapper.innerHTML = `
-            <div class="chart-bar ${chartId === 'sdr-resgate' ? 'resgate' : ''}" 
-                 style="height: ${barHeight}%">
-                <div class="chart-bar-value">${displayValue}</div>
-            </div>
-            <div class="chart-bar-label">${item.name.split(' ')[0]}</div>
-        `;
-        
-        barsContainer.appendChild(barWrapper);
-        
-        // Animação de entrada
-        setTimeout(() => {
-            const bar = barWrapper.querySelector('.chart-bar');
-            if (bar) {
-                bar.style.transform = 'scaleY(1)';
-            }
-        }, index * 100);
-    });
-    
-    chartElement.appendChild(barsContainer);
-    console.log(`✅ Gráfico ${chartId} atualizado com sucesso`);
-}
 
         // Função principal para atualizar todos os gráficos
         function updateCharts() {
@@ -1711,17 +1894,20 @@ function updateSingleChart(chartId) {
                 document.getElementById('resgate-progress').style.width = `${Math.min((totalResgateAccounts / resgateGoal) * 100, 100)}%`;
                 
                 // Atualizar tops
-                const topSdr = [...sdrData].sort((a, b) => b.revenue - a.revenue)[0];
-                document.getElementById('top-sdr').textContent = topSdr.revenue > 0 ? topSdr.name : "-";
+                const topSdr = [...sdrData].sort((a, b) => b.accounts - a.accounts)[0];
+                document.getElementById('top-sdr').textContent = topSdr.accounts > 0 ? topSdr.name : "-";
                 document.getElementById('top-sdr-accounts').textContent = `${topSdr.accounts} contas`;
                 
                 const topCloser = [...closerData].sort((a, b) => b.accounts - a.accounts)[0];
                 document.getElementById('top-closer').textContent = topCloser.accounts > 0 ? topCloser.name : "-";
                 document.getElementById('top-closer-accounts').textContent = `${topCloser.accounts} contas`;
                 
-                const topSdrResgate = [...sdrResgateData].sort((a, b) => b.revenue - a.revenue)[0];
-                document.getElementById('top-sdr-resgate').textContent = topSdrResgate.revenue > 0 ? topSdrResgate.name : "-";
+                const topSdrResgate = [...sdrResgateData].sort((a, b) => b.accounts - a.accounts)[0];
+                document.getElementById('top-sdr-resgate').textContent = topSdrResgate.accounts > 0 ? topSdrResgate.name : "-";
                 document.getElementById('top-sdr-resgate-accounts').textContent = `${topSdrResgate.accounts} contas`;
+                
+                // Atualizar conquistas
+                updateAchievements();
                 
                 // Atualizar gráficos
                 updateSingleChart('sdr');
@@ -1733,40 +1919,6 @@ function updateSingleChart(chartId) {
             }
         }
 
-        // Event listeners para filtros
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const chart = this.dataset.chart;
-                const type = this.dataset.type;
-                
-                // Atualizar botões ativos
-                this.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                
-                // Atualizar configuração e gráfico
-                chartConfigs[chart].type = type;
-                updateSingleChart(chart);
-            });
-        });
-
-
-// Adicionar botão de força (temporário) para debug
-function addForceUpdateButton() {
-    const forceBtn = document.createElement('button');
-    forceBtn.textContent = '🔄 FORÇAR ATUALIZAÇÃO';
-    forceBtn.style.position = 'fixed';
-    forceBtn.style.top = '10px';
-    forceBtn.style.left = '10px';
-    forceBtn.style.zIndex = '10000';
-    forceBtn.style.background = '#FF6B35';
-    forceBtn.style.color = 'white';
-    forceBtn.style.border = 'none';
-    forceBtn.style.padding = '10px';
-    forceBtn.style.borderRadius = '5px';
-    forceBtn.style.cursor = 'pointer';
-    forceBtn.onclick = forceUpdateCharts;
-    document.body.appendChild(forceBtn);
-}
         // ===============================
         // EVENT LISTENERS
         // ===============================
@@ -2074,9 +2226,9 @@ function addForceUpdateButton() {
         // ===============================
 
         // Iniciar ouvindo mudanças do Firebase
-       listenToFirebaseChanges();
-loadRecentSales();
-updateCharts();
+        listenToFirebaseChanges();
+        loadRecentSales();
+        updateCharts();
     
         // Carregar dados iniciais do Firebase
         database.ref('salesData').once('value').then((snapshot) => {
@@ -2105,6 +2257,3 @@ updateCharts();
     </script>
 </body>
 </html>
-
-
-
